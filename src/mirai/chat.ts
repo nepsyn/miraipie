@@ -1,0 +1,42 @@
+import {Contact, Friend, Group, GroupMember, MessageChain, OtherClient} from '.';
+
+export interface ChatMessage {
+    readonly type: ChatMessageType;
+    sender: Contact;
+    messageChain: MessageChain;
+}
+
+export interface FriendMessage extends ChatMessage {
+    type: 'FriendMessage';
+    sender: Friend;
+}
+
+export interface GroupMessage extends ChatMessage {
+    type: 'GroupMessage';
+    sender: Group;
+}
+
+export interface TempMessage extends ChatMessage {
+    type: 'TempMessage';
+    sender: GroupMember;
+}
+
+export interface StrangerMessage extends ChatMessage {
+    type: 'StrangerMessage';
+    sender: Friend;
+}
+
+export interface OtherClientMessage extends ChatMessage {
+    type: 'OtherClientMessage';
+    sender: OtherClient;
+}
+
+export type ChatMessageMap = {
+    FriendMessage: FriendMessage,
+    GroupMessage: GroupMessage,
+    TempMessage: TempMessage,
+    StrangerMessage: StrangerMessage,
+    OtherClientMessage: OtherClientMessage
+}
+
+export type ChatMessageType = keyof ChatMessageMap;

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "es5",
+    "outDir": "lib",
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "declarationDir": "types",
+    "lib": [
+      "es2016"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+}
