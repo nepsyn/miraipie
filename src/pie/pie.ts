@@ -51,7 +51,7 @@ export interface PieOptions {
     id: string;
     name: string;
     author: string;
-    version: [number, number, number, string?];
+    version: [number, number, number, string?] | string;
 
     description?: string;
     authorUrl?: string;
@@ -83,7 +83,7 @@ export class Pie {
     id: string;
     name: string;
     author: string;
-    version: [number, number, number, string?];
+    version: [number, number, number, string?] | string;
 
     description?: string;
     authorUrl?: string;
@@ -98,7 +98,7 @@ export class Pie {
     filters: PieFilter[];
 
     logger: Logger;
-    isPie: boolean = true;
+    readonly isPie = true;
 
     messageHandler?(window: ChatWindow, chain: MessageChain): PieResult | Promise<PieResult>;
 
@@ -209,7 +209,7 @@ export class PieFilter {
         };
     }
 
-    static signatureMatch: PieFilterBuilder = function (regexp: RegExp): PieFilter {
+    static signatureMatch: PieFilterBuilder = function (regexp: RegExp | string): PieFilter {
         return {
             sign: `Match(${regexp})`,
             handler: (window, chain) => chain.toString().match(regexp) !== null
@@ -266,20 +266,37 @@ export class PieAgent {
         return makeReadonly(this.controller.get(fullId)?.pie);
     }
 
-    install(pie: Pie) {
-        this.controller.set(pie.fullId, {
-            pie,
-            enabled: false,
-            exports: pie.exports,
-            configs: pie.configs
-        });
-        pie.logger.debug('已加载');
-        if (pie.installed) {
-            makeAsync(pie.installed, pie)().catch((err) => {
-                pie.logger.error('调用钩子installed发生错误:', err);
-            });
+    load(path: string): Pie {
+        try {
+            const pie = require(path);
+            if (pie.isPie) {
+                MiraiPieApp.instance.db?.saveOrUpdatePie(pie, path);
+                return pie;
+            }
+            else logger.error(`位于路径 ${path} 上的模块不是有效的pie`);
+        } catch (err) {
+            logger.error(`尝试加载路径 ${path} 错误:`, err);
         }
-        if (this.autoEnable) this.enable(pie.fullId);
+    }
+
+    install(pie: Pie) {
+        if (pie.isPie) {
+            this.controller.set(pie.fullId, {
+                pie,
+                enabled: false,
+                exports: pie.exports,
+                configs: pie.configs
+            });
+            pie.logger.debug('已加载');
+            if (pie.installed) {
+                makeAsync(pie.installed, pie)().catch((err) => {
+                    pie.logger.error('调用钩子installed发生错误:', err);
+                });
+            }
+            if (this.autoEnable) this.enable(pie.fullId);
+        } else {
+            logger.error(`加载pie失败, 请检查 ${pie.fullId} 是否为一个有效的pie`)
+        }
     }
 
     uninstall(fullId: string) {

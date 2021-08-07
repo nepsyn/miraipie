@@ -37,7 +37,7 @@ export abstract class ChatWindow {
     abstract sendNudge(subjectId?: number): Promise<boolean>;
 
     async recall(messageId: number): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.recall(messageId);
+        const resp = await MiraiPieApp.instance.adapter?.recall(messageId);
         return resp?.code === ResponseCode.Success;
     }
 }
@@ -50,22 +50,22 @@ export class FriendChatWindow extends ChatWindow {
     }
 
     protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.sendFriendMessage(this.contact.id, messageChain, quoteMessageId);
+        const resp = await MiraiPieApp.instance.adapter?.sendFriendMessage(this.contact.id, messageChain, quoteMessageId);
         return resp?.messageId;
     }
 
     async sendNudge(subjectId?: number): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.sendNudge(this.contact.id, subjectId || this.contact.id, 'Friend');
+        const resp = await MiraiPieApp.instance.adapter?.sendNudge(this.contact.id, subjectId || this.contact.id, 'Friend');
         return resp?.code === ResponseCode.Success;
     }
 
     async getProfile(): Promise<Profile> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.getFriendProfile(this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.getFriendProfile(this.contact.id);
         return resp?.data;
     }
 
     async delete(): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.deleteFriend(this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.deleteFriend(this.contact.id);
         return resp?.code === ResponseCode.Success;
     }
 }
@@ -82,87 +82,87 @@ export class GroupChatWindow extends ChatWindow {
     }
 
     protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.sendGroupMessage(this.contact.id, messageChain, quoteMessageId);
+        const resp = await MiraiPieApp.instance.adapter?.sendGroupMessage(this.contact.id, messageChain, quoteMessageId);
         return resp?.messageId;
     }
 
     async sendNudge(subjectId: number): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.sendNudge(this.contact.id, subjectId, 'Group');
+        const resp = await MiraiPieApp.instance.adapter?.sendNudge(this.contact.id, subjectId, 'Group');
         return resp?.code === ResponseCode.Success;
     }
 
     async mute(memberId: number, time: number = 60): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.muteMember(memberId, this.contact.id, time);
+        const resp = await MiraiPieApp.instance.adapter?.muteMember(memberId, this.contact.id, time);
         return resp?.code === ResponseCode.Success;
     }
 
     async unmute(memberId: number): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.unmuteMember(memberId, this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.unmuteMember(memberId, this.contact.id);
         return resp?.code === ResponseCode.Success;
     }
 
     async kick(memberId: number, message: string = ''): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.kickMember(memberId, this.contact.id, message);
+        const resp = await MiraiPieApp.instance.adapter?.kickMember(memberId, this.contact.id, message);
         return resp?.code === ResponseCode.Success;
     }
 
     async quit(): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.quitGroup(this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.quitGroup(this.contact.id);
         return resp?.code === ResponseCode.Success;
     }
 
     async muteAll(): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.muteAll(this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.muteAll(this.contact.id);
         return resp?.code === ResponseCode.Success;
     }
 
     async unmuteAll(): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.unmuteAll(this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.unmuteAll(this.contact.id);
         return resp?.code === ResponseCode.Success;
     }
 
     async setEssence(messageId: number): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.setEssence(messageId);
+        const resp = await MiraiPieApp.instance.adapter?.setEssence(messageId);
         return resp?.code === ResponseCode.Success;
     }
 
     async getConfig(): Promise<GroupConfig> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.getGroupConfig(this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.getGroupConfig(this.contact.id);
         return resp?.data;
     }
 
     async setConfig(config: GroupConfig): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.setGroupConfig(this.contact.id, config);
+        const resp = await MiraiPieApp.instance.adapter?.setGroupConfig(this.contact.id, config);
         return resp?.code === ResponseCode.Success;
     }
 
     async getFileList(path: string = ''): Promise<FileOverview[]> {
-        const resp = await MiraiPieApp.instance.fileAdapter?.getGroupFileList(path, this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.getGroupFileList(path, this.contact.id);
         return resp?.data;
     }
 
     async getFileInfo(fileId: string): Promise<FileOverview> {
-        const resp = await MiraiPieApp.instance.fileAdapter?.getGroupFileInfo(fileId, this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.getGroupFileInfo(fileId, this.contact.id);
         return resp?.data;
     }
 
     async createDirectory(directoryName: string, parentFileId: string = ''): Promise<FileOverview> {
-        const resp = await MiraiPieApp.instance.fileAdapter?.createGroupFileDirectory(parentFileId, directoryName, this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.createGroupFileDirectory(parentFileId, directoryName, this.contact.id);
         return resp?.data;
     }
 
     async deleteFile(fileId: string): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.fileAdapter?.deleteGroupFile(fileId, this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.deleteGroupFile(fileId, this.contact.id);
         return resp?.code === ResponseCode.Success;
     }
 
     async moveFile(fileId: string, moveToDirectoryId: string = ''): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.fileAdapter?.moveGroupFile(fileId, this.contact.id, moveToDirectoryId);
+        const resp = await MiraiPieApp.instance.adapter?.moveGroupFile(fileId, this.contact.id, moveToDirectoryId);
         return resp?.code === ResponseCode.Success;
     }
 
     async renameFile(fileId: string, name: string): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.fileAdapter?.moveGroupFile(fileId, this.contact.id, name);
+        const resp = await MiraiPieApp.instance.adapter?.moveGroupFile(fileId, this.contact.id, name);
         return resp?.code === ResponseCode.Success;
     }
 }
@@ -175,27 +175,27 @@ export class TempChatWindow extends ChatWindow {
     }
 
     protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.sendTempMessage(this.contact.id, this.contact.group.id, messageChain, quoteMessageId);
+        const resp = await MiraiPieApp.instance.adapter?.sendTempMessage(this.contact.id, this.contact.group.id, messageChain, quoteMessageId);
         return resp?.messageId;
     }
 
     async sendNudge(subjectId?: number): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.sendNudge(this.contact.id, subjectId || this.contact.id, 'Stranger');
+        const resp = await MiraiPieApp.instance.adapter?.sendNudge(this.contact.id, subjectId || this.contact.id, 'Stranger');
         return resp?.code === ResponseCode.Success;
     }
 
     async getProfile(): Promise<Profile> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.getMemberProfile(this.contact.group.id, this.contact.id);
+        const resp = await MiraiPieApp.instance.adapter?.getMemberProfile(this.contact.group.id, this.contact.id);
         return resp?.data;
     }
 
     async getInfo(): Promise<GroupMember> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.getMemberInfo(this.contact.id, this.contact.group.id);
+        const resp = await MiraiPieApp.instance.adapter?.getMemberInfo(this.contact.id, this.contact.group.id);
         return resp?.data;
     }
 
     async setInfo(info: GroupMember): Promise<boolean> {
-        const resp = await MiraiPieApp.instance.apiAdapter?.setMemberInfo(this.contact.id, this.contact.group.id, info);
+        const resp = await MiraiPieApp.instance.adapter?.setMemberInfo(this.contact.id, this.contact.group.id, info);
         return resp?.code === ResponseCode.Success;
     }
 }

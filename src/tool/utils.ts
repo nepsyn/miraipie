@@ -1,3 +1,5 @@
+import * as Path from 'path';
+
 export function makeReadonly<T extends object>(target: T): T {
     if (target) {
         return new Proxy(target, {
@@ -22,6 +24,9 @@ export function makeAsync<T, D>(func: (...args: any[]) => Promise<T> | T, thisAr
 }
 
 export async function sleep(ms: number = 100): Promise<void> {
-    return  new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function getAssetPath(name: string): string {
+    return Path.normalize(Path.join(__dirname, `../../assets/${name}`));
+}

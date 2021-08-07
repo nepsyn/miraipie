@@ -6,29 +6,25 @@ import WebSocket from 'ws';
 import {
     AboutResponse,
     ApiResponse,
-    CommonApi,
     EventHandler,
-    FileApi,
     FileInfoResponse,
     FileListResponse,
     FriendListResponse,
     GroupConfigResponse,
     GroupListResponse,
     GroupMemberResponse,
-    ListenerApi,
     MemberListResponse,
     MessageFromIdResponse,
     MessageHandler,
     MessageRetrieveResponse,
+    MiraiApiHttpAdapterApi,
     MiraiApiHttpClientSetting,
     ProfileResponse,
     ResponseCode,
     SendMessageResponse,
-    UploadApi,
     UploadImageResponse,
     UploadType,
     UploadVoiceResponse,
-    VerifyApi,
     VerifyResponse
 } from '.';
 import {ChatMessage, Event, FileOverview, GroupConfig, GroupMember, MessageChain, NudgeKind, SingleMessage} from '..';
@@ -37,7 +33,12 @@ import {sleep} from '../../tool';
 
 const logger = log4js.getLogger('adapter');
 
-export class HttpAdapter implements VerifyApi, CommonApi, FileApi, UploadApi, ListenerApi {
+type MiraiApiHttpAdapterSetting = MiraiApiHttpClientSetting & {
+    messageHandler?: MessageHandler;
+    eventHandler?: EventHandler
+};
+
+export class HttpAdapter implements MiraiApiHttpAdapterApi {
     readonly type = 'HttpAdapter';
     setting: MiraiApiHttpClientSetting;
     session: string;
@@ -45,10 +46,7 @@ export class HttpAdapter implements VerifyApi, CommonApi, FileApi, UploadApi, Li
     messageHandler?: MessageHandler;
     eventHandler?: EventHandler;
 
-    constructor(options: MiraiApiHttpClientSetting & {
-        messageHandler?: MessageHandler;
-        eventHandler?: EventHandler
-    }) {
+    constructor(options: MiraiApiHttpAdapterSetting) {
         this.messageHandler = options.messageHandler;
         this.eventHandler = options.eventHandler;
 
@@ -336,7 +334,7 @@ export class HttpAdapter implements VerifyApi, CommonApi, FileApi, UploadApi, Li
     }
 }
 
-export class WebsocketAdapter implements CommonApi, FileApi, ListenerApi {
+export class WebsocketAdapter implements MiraiApiHttpAdapterApi {
     readonly type = 'WebsocketAdapter';
     setting: MiraiApiHttpClientSetting;
     isListening: boolean;
@@ -346,10 +344,7 @@ export class WebsocketAdapter implements CommonApi, FileApi, ListenerApi {
     messageHandler?: MessageHandler;
     eventHandler?: EventHandler;
 
-    constructor(options: MiraiApiHttpClientSetting & {
-        messageHandler?: MessageHandler;
-        eventHandler?: EventHandler
-    }) {
+    constructor(options: MiraiApiHttpAdapterSetting) {
         this.messageHandler = options.messageHandler;
         this.eventHandler = options.eventHandler;
 
@@ -403,6 +398,9 @@ export class WebsocketAdapter implements CommonApi, FileApi, ListenerApi {
         if (!this.isListening) {
             const id = qq || MiraiPieApp.instance.id;
             this.ws = new WebSocket(`ws://${this.setting.host}:${this.setting.port}/all?verifyKey=${this.setting.verifyKey}&qq=${id}`);
+            this.ws.on('error', (err) => {
+                logger.error(`WebsocketAdapter 监听器启动错误:`, err);
+            });
             this.ws.on('message', (buffer: Buffer) => {
                 const message: { syncId: string, data: ChatMessage | Event | ApiResponse } = JSON.parse(buffer.toString());
                 if ('syncId' in message && 'data' in message) {
@@ -578,5 +576,20 @@ export class WebsocketAdapter implements CommonApi, FileApi, ListenerApi {
 
     async handleBotInvitedJoinGroupRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string): Promise<ApiResponse> {
         return await this.request('resp_botInvitedJoinGroupRequestEvent', {eventId, fromId, groupId, operate, message});
+    }
+}
+
+export const MiraiApiHttpAdapterMap = {
+    HttpAdapter,
+    WebsocketAdapter
+}
+
+export type MiraiApiHttpAdapterType = keyof typeof MiraiApiHttpAdapterMap;
+
+export function getMiraiApiHttpAdapter(name: MiraiApiHttpAdapterType | string, options: MiraiApiHttpAdapterSetting): MiraiApiHttpAdapterApi {
+    if (name in MiraiApiHttpAdapterMap) return new MiraiApiHttpAdapterMap[name](options);
+    else {
+        logger.warn(`没有找到名为 '${name}' 的adapter, 已使用HttpAdapter代替`);
+        return new HttpAdapter(options);
     }
 }

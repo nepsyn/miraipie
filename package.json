@@ -1,12 +1,11 @@
 {
   "name": "miraipie",
   "version": "1.0.0",
-  "description": "a plugin development framework for mirai-api-http",
+  "description": "the most flexible plugin development framework for mirai-api-http",
   "main": "lib/miraipie.js",
   "types": "types/miraipie.d.ts",
   "scripts": {
-    "build": "rd /Q /S lib types && tsc",
-    "test": "rd /Q /S lib types && tsc && cd test && node test.js"
+    "build": "tsc"
   },
   "bin": {
     "miraipie": "bin/miraipie"
@@ -28,8 +27,17 @@
     "axios": "^0.21.1",
     "better-sqlite3": "^7.4.3",
     "commander": "^8.1.0",
+    "enquirer": "^2.3.6",
     "form-data": "^4.0.0",
     "log4js": "^6.3.0",
     "ws": "^8.0.0"
-  }
+  },
+  "files": [
+    "assets",
+    "bin",
+    "docs",
+    "lib",
+    "src",
+    "types"
+  ]
 }
