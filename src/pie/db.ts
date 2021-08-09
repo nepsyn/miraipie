@@ -9,6 +9,7 @@ const logger = log4js.getLogger('db');
 
 export abstract class DatabaseAdapter {
     readonly type: string;
+    abstract open: boolean;
 
     static create: (path: string) => DatabaseAdapter;
 
@@ -23,21 +24,32 @@ export abstract class DatabaseAdapter {
     abstract saveEvent(event: Event): boolean;
 
     abstract saveOrUpdatePie(pie: Pie, path: string): boolean;
+
+    abstract getPiePath(fullId: string): string;
+
+    abstract deletePie(fullId: string);
+
+    abstract clearMessageHistory(days: number): number;
+
+    abstract clearEventHistory(days: number): number;
 }
 
 export class Sqlite3Adapter extends DatabaseAdapter {
     readonly type = 'Sqlite3Adapter';
-    private db: db.Database;
+    private database: db.Database;
+
+    get open(): boolean {
+        return this.database && this.database.open;
+    }
 
     constructor(public path: string) {
         super();
         try {
-            this.db = db(path, {
+            this.database = db(path, {
                 fileMustExist: true
             });
-        } catch {
-            fs.copyFileSync(getAssetPath('miraipie.db.template'), path);
-            this.db = db(path);
+        } catch (err) {
+            logger.error(`打开数据库文件 ${path} 出错:`, err);
         }
     }
 
@@ -47,13 +59,13 @@ export class Sqlite3Adapter extends DatabaseAdapter {
     }
 
     close() {
-        this.db.close();
-        this.db = null;
+        this.database.close();
+        this.database = null;
     }
 
     saveAppOptions(options: MiraiPieAppOptions): boolean {
-        this.db?.prepare('DELETE FROM sys').run();
-        const resp = this.db
+        this.database?.prepare('DELETE FROM sys').run();
+        const resp = this.database
             ?.prepare('INSERT INTO sys VALUES ($qq, $adapterName, $listenerAdapterName, $verifyKey, $host, $port)')
             .run({
                 qq: options.id,
@@ -67,7 +79,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
     }
 
     loadAppOptions(): MiraiPieAppOptions {
-        const options = this.db.prepare('SELECT * FROM sys').get();
+        const options = this.database.prepare('SELECT * FROM sys').get();
         if (options) {
             return {
                 id: options.qq,
@@ -83,11 +95,11 @@ export class Sqlite3Adapter extends DatabaseAdapter {
     }
 
     saveMessage(sourceId: number, messageChain: MessageChain, from: number, to: number, type: ChatMessageType): boolean {
-        const resp = this.db
+        const resp = this.database
             ?.prepare('INSERT INTO message (id, content, from_id, to_id, type) VALUES ($sourceId, $content, $from_id, $to_id, $type)')
             .run({
                 sourceId,
-                content: JSON.stringify(messageChain),
+                content: JSON.stringify(messageChain.dropped('Source')),
                 from_id: from,
                 to_id: to,
                 type
@@ -96,7 +108,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
     }
 
     saveEvent(event: Event): boolean {
-        const resp = this.db
+        const resp = this.database
             ?.prepare('INSERT INTO event (content, type) VALUES ($content, $type)')
             .run({
                 content: JSON.stringify(event),
@@ -106,12 +118,12 @@ export class Sqlite3Adapter extends DatabaseAdapter {
     }
 
     saveOrUpdatePie(pie: Pie, path?: string): boolean {
-        const count = this.db
+        const count = this.database
             ?.prepare('SELECT COUNT(*) FROM pie WHERE full_id=?')
             .pluck()
             .get(pie.fullId);
         if (count > 0) {
-            const resp = this.db
+            const resp = this.database
                 ?.prepare('UPDATE pie SET config=$config, data=$data, path=$path WHERE full_id=$fullId')
                 .run({
                     fullId: pie.fullId,
@@ -121,7 +133,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
                 });
             return resp?.changes > 0;
         } else {
-            const resp = this.db
+            const resp = this.database
                 ?.prepare('INSERT INTO pie VALUES ($fullId, $path, $config, $data)')
                 .run({
                     fullId: pie.fullId,
@@ -134,15 +146,29 @@ export class Sqlite3Adapter extends DatabaseAdapter {
     }
 
     getPiePath(fullId: string): string {
-        return this.db
+        return this.database
             ?.prepare(`SELECT [path] FROM pie WHERE full_id=?`)
             .pluck()
             .get(fullId)
     }
 
     deletePie(fullId: string) {
-        this.db
+        this.database
             ?.prepare('DELETE FROM pie WHERE full_id=?')
             .run(fullId);
+    }
+
+    clearMessageHistory(days: number): number {
+        return this.database
+            ?.prepare(`DELETE FROM message WHERE JULIANDAY(DATETIME('now', 'localtime'))-JULIANDAY(DATETIME(timestamp))>?`)
+            .run(days)
+            ?.changes;
+    }
+
+    clearEventHistory(days: number): number {
+        return this.database
+            ?.prepare(`DELETE FROM event WHERE JULIANDAY(DATETIME('now', 'localtime'))-JULIANDAY(DATETIME(timestamp))>?`)
+            .run(days)
+            ?.changes;
     }
 }

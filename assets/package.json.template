@@ -6,7 +6,7 @@
   "scripts": {},
   "keywords": [],
   "author": "",
-  "license": "GNU",
+  "license": "AGPL-3.0",
   "devDependencies": {
     "miraipie": "^1.0.0"
   }

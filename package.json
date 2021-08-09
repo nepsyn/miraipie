@@ -16,7 +16,7 @@
     "mirai-api-http"
   ],
   "author": "Nepsyn",
-  "license": "GNU",
+  "license": "AGPL-3.0",
   "devDependencies": {
     "@types/better-sqlite3": "^5.4.3",
     "@types/node": "^15.12.5",

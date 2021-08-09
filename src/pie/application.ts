@@ -113,7 +113,7 @@ export class MiraiPieApp {
     }
 
     async getProfile(): Promise<Profile> {
-        const resp = await this.adapter?.getBotProfile();
+        const resp = await this.adapter.getBotProfile();
         return resp?.data;
     }
 
@@ -123,46 +123,46 @@ export class MiraiPieApp {
     }
 
     async stop() {
-        await this.listenerAdapter?.stop();
+        await this.listenerAdapter.stop();
     }
 
     async getFriendList(): Promise<Friend[]> {
-        const resp = await this.adapter?.getFriendList();
+        const resp = await this.adapter.getFriendList();
         return resp?.data;
     }
 
     async getGroupList(): Promise<Group[]> {
-        const resp = await this.adapter?.getGroupList();
+        const resp = await this.adapter.getGroupList();
         return resp?.data;
     }
 
     async getMemberList(groupId: number): Promise<GroupMember[]> {
-        const resp = await this.adapter?.getMemberList(groupId);
+        const resp = await this.adapter.getMemberList(groupId);
         return resp?.data;
     }
 
     async handleNewFriendRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string): Promise<boolean> {
-        const resp = await this.adapter?.handleNewFriendRequest(eventId, fromId, groupId, operate, message);
+        const resp = await this.adapter.handleNewFriendRequest(eventId, fromId, groupId, operate, message);
         return resp?.code === ResponseCode.Success;
     }
 
     async handleMemberJoinRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string): Promise<boolean> {
-        const resp = await this.adapter?.handleMemberJoinRequest(eventId, fromId, groupId, operate, message);
+        const resp = await this.adapter.handleMemberJoinRequest(eventId, fromId, groupId, operate, message);
         return resp?.code === ResponseCode.Success;
     }
 
     async handleBotInvitedJoinGroupRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string): Promise<boolean> {
-        const resp = await this.adapter?.handleBotInvitedJoinGroupRequest(eventId, fromId, groupId, operate, message);
+        const resp = await this.adapter.handleBotInvitedJoinGroupRequest(eventId, fromId, groupId, operate, message);
         return resp?.code === ResponseCode.Success;
     }
 
     async registerCommand(name: string, alias: string[], usage: string, description: string): Promise<boolean> {
-        const resp = await this.adapter?.registerCommand(name, alias, usage, description);
+        const resp = await this.adapter.registerCommand(name, alias, usage, description);
         return resp?.code === ResponseCode.Success;
     }
 
     async executeCommand(command: MessageChain): Promise<boolean> {
-        const resp = await this.adapter?.executeCommand(command);
+        const resp = await this.adapter.executeCommand(command);
         return resp?.code === ResponseCode.Success;
     }
 }

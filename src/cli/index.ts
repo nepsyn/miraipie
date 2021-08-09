@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import log4js from 'log4js';
 import * as Path from 'path';
 import {MiraiApiHttpAdapterMap} from '../mirai';
-import {createMiraiPieApp, Sqlite3Adapter} from '../pie';
+import {createMiraiPieApp, DatabaseAdapter, Sqlite3Adapter} from '../pie';
 import {getAssetPath} from '../tool';
 
 const logger = log4js.getLogger('cli');
@@ -28,6 +28,7 @@ log4js.configure({
     }
 });
 
+
 function parseFullId(fullId: string) {
     let namespace: string = null, id: string = null;
     if (fullId) {
@@ -37,14 +38,25 @@ function parseFullId(fullId: string) {
     return [namespace, id];
 }
 
+function useDatabase(path: string): Promise<DatabaseAdapter> {
+    return new Promise((resolve) => {
+        const db = new Sqlite3Adapter(path);
+        if (db.open) resolve(db);
+    });
+}
+
 program
     .version('miraipie 1.0.0', '-V, --version', '显示版本信息')
     .option('-d, --db-file <path>', 'miraipie的数据库文件路径', 'miraipie.db')
-    .option('-r, --renew', '重新询问配置')
+    .option('-r, --renew', '重置miraipie并重新填写配置')
     .option('-p, --pie <paths...>', 'miraipie需要额外加载的pie的模块路径')
     .helpOption('-h, --help', '显示帮助信息')
     .action(async (opts) => {
         const db = new Sqlite3Adapter(opts.dbFile);
+        if (db.open && fs.statSync(opts.dbFile).size / Math.pow(2, 30) > 1) {
+            logger.warn('数据库文件大小已超过1GB, 建议使用命令 `miraipie clear-history` 清除历史消息记录');
+        }
+
         const options = db.loadAppOptions();
         if ((!options) || opts.renew) {
             prompt([
@@ -166,29 +178,23 @@ program
 program
     .command('add <full_id>')
     .aliases(['get', 'a'])
+    .option('-d, --db-file <path>', 'miraipie的数据库文件路径', 'miraipie.db')
     .description('从远程或本地添加pie')
     .action((fullId: string) => {
 
     });
 
 program
-    .command('update [full_id]')
-    .aliases(['upgrade', 'u'])
-    .description('从远程或本地更新pie')
-    .action((fullId: string) => {
-
-    });
-
-program
     .command('delete <full_id>')
-    .aliases(['remove', 'd'])
+    .aliases(['remove', 'rm', 'd'])
+    .option('-d, --db-file <path>', 'miraipie的数据库文件路径', 'miraipie.db')
+    .option('-f, --hard', '是否同时删除本地文件')
     .description('删除已添加的pie')
     .action((fullId: string) => {
-        if (fs.existsSync('miraipie.db')) {
-            const db = new Sqlite3Adapter('miraipie.db');
+        useDatabase(program.opts().dbFile).then((db) => {
             const path = db.getPiePath(fullId);
             if (path) {
-                if (fs.existsSync(path)) {
+                if (program.opts().hard && fs.existsSync(path)) {
                     const stat = fs.statSync(path);
                     if (stat.isDirectory()) fs.rmdirSync(path);
                     else fs.unlinkSync(path);
@@ -198,9 +204,34 @@ program
             } else {
                 logger.warn(`未找到pie '${fullId}'`)
             }
-        } else {
-            logger.warn('当前目录下不存在miraipie.db数据库文件');
-        }
+            db.close();
+        });
+    });
+
+program
+    .command('clear-history [days]')
+    .aliases(['ch', 'clear'])
+    .option('-d, --db-file <path>', 'miraipie的数据库文件路径', 'miraipie.db')
+    .description('删除数据库中消息和事件历史')
+    .action((daysString: string) => {
+        useDatabase(program.opts().dbFile).then((db) => {
+            const candidate = parseInt(daysString);
+            const days = candidate > 0 ? candidate : 30;
+            prompt({
+                type: 'confirm',
+                name: 'confirm',
+                message: `是否删除${days}天前的历史消息和事件记录?`
+            }).then((pro: any) => {
+                if (pro.confirm) {
+                    const messageCount = db.clearMessageHistory(days);
+                    const eventCount = db.clearEventHistory(days);
+                    logger.info(`已删除${days}天前的 ${messageCount} 条消息记录, ${eventCount} 条事件记录`);
+                }
+                db.close();
+            }).catch(() => {
+                db.close();
+            });
+        });
     });
 
 program

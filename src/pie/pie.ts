@@ -51,7 +51,7 @@ export interface PieOptions {
     id: string;
     name: string;
     author: string;
-    version: [number, number, number, string?] | string;
+    version: string;
 
     description?: string;
     authorUrl?: string;
@@ -76,6 +76,8 @@ export interface PieOptions {
     enabled?(this: Pie): void;
 
     disabled?(this: Pie): void;
+
+    updated?(this: Pie, oldVersion: string): void;
 }
 
 export class Pie {
@@ -83,7 +85,7 @@ export class Pie {
     id: string;
     name: string;
     author: string;
-    version: [number, number, number, string?] | string;
+    version: string;
 
     description?: string;
     authorUrl?: string;
@@ -111,6 +113,8 @@ export class Pie {
     enabled?(): void;
 
     disabled?(): void;
+
+    updated?(oldVersion: string): void;
 
     constructor(options: PieOptions) {
         if (!(options.namespace.match(/^[\w]+$/) && options.id.match(/^[\w]+$/))) {
@@ -142,6 +146,7 @@ export class Pie {
         this.uninstalled = options.uninstalled;
         this.enabled = options.enabled;
         this.disabled = options.disabled;
+        this.updated = options.updated;
 
         this.messageHandler = options.messageHandler;
         this.eventHandler = options.eventHandler;
@@ -214,6 +219,13 @@ export class PieFilter {
             sign: `Match(${regexp})`,
             handler: (window, chain) => chain.toString().match(regexp) !== null
         };
+    }
+
+    static messageEquals: PieFilterBuilder = function (displayString: string): PieFilter {
+        return {
+            sign: `MessageEquals(${displayString})`,
+            handler: (window, chain) => chain.toDisplayString() === displayString
+        }
     }
 
     static or: PieFilterBuilder = function (...filters: PieFilter[]): PieFilter {
