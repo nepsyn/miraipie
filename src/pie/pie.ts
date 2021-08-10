@@ -34,10 +34,11 @@ export class PieResult {
     }
 }
 
-type StorableType = string | number | boolean | Array<StorableType> | { [key: string]: StorableType };
-type ConfigConstructor<T = StorableType> = { new(...args): T & {}; } | { (): T; }
+type SerializableType = string | number | boolean | Array<SerializableType> | SerializableObject;
+type SerializableObject = { [key: string]: SerializableType };
+type ConfigConstructor<T = SerializableType> = { new(...args): T & {}; } | { (): T; }
 
-interface UserConfigMeta<T = StorableType> {
+interface UserConfigMeta<T = SerializableType> {
     [key: string]: {
         type: ConfigConstructor<T>;
         required?: boolean;
@@ -59,7 +60,7 @@ export interface PieOptions {
     dependencies?: string[];
     keywords?: string[];
 
-    data?: { [key: string]: StorableType };
+    data?: object;
     exports?: object;
     methods?: { [name: string]: (this: Pie, ...args: any[]) => any };
     userConfigMeta?: UserConfigMeta;
@@ -93,10 +94,10 @@ export class Pie {
     dependencies?: string[];
     keywords?: string[];
 
-    data?: { [key: string]: StorableType };
+    data?: object;
     exports?: object;
     userConfigMeta?: UserConfigMeta;
-    configs: { [key: string]: StorableType };
+    configs: SerializableObject;
     filters: PieFilter[];
 
     logger: Logger;
@@ -134,9 +135,8 @@ export class Pie {
 
         this.logger = log4js.getLogger(this.fullId);
 
-        if (options.data) Object.assign(this, options.data);
+        this.data = options.data || {};
         this.exports = options.exports || {};
-        if (options.methods) Object.assign(this, options.methods);
         this.userConfigMeta = options.userConfigMeta || {};
         this.configs = {};
         for (const i of Object.keys(this.userConfigMeta)) this.configs[i] = options.userConfigMeta[i].default;
@@ -150,6 +150,8 @@ export class Pie {
 
         this.messageHandler = options.messageHandler;
         this.eventHandler = options.eventHandler;
+
+        for (const key in options.methods || {}) this[key in this ? `$${key}` : key] = options.methods[key];
     }
 
     get fullId(): string {
@@ -161,8 +163,8 @@ export class Pie {
     }
 
     private require(fullId: string): object {
-        if (this.dependencies.includes(fullId)) return MiraiPieApp.instance?.pieAgent.getPie(fullId)?.exports;
-        else logger.error(`所请求的依赖项 '${fullId}' 需要在pie的声明中指定`);
+        if (!this.dependencies.includes(fullId)) logger.warn(`所请求的依赖项 '${fullId}' 没有在pie的声明中指定`);
+        return MiraiPieApp.instance?.pieAgent.getPie(fullId)?.exports;
     }
 }
 
@@ -254,14 +256,13 @@ export class PieFilter {
 interface PieControl {
     pie: Pie;
     enabled: boolean;
-    configs: { [key: string]: StorableType };
-    exports: object;
+    path: string;
 }
 
 export class PieAgent {
     private readonly controller: Map<string, PieControl>;
 
-    constructor(private autoEnable: boolean = true) {
+    constructor() {
         this.controller = new Map();
     }
 
@@ -278,26 +279,31 @@ export class PieAgent {
         return makeReadonly(this.controller.get(fullId)?.pie);
     }
 
-    load(path: string): Pie {
-        try {
-            const pie = require(path);
-            if (pie.isPie) {
-                MiraiPieApp.instance.db?.saveOrUpdatePie(pie, path);
-                return pie;
-            }
-            else logger.error(`位于路径 ${path} 上的模块不是有效的pie`);
-        } catch (err) {
-            logger.error(`尝试加载路径 ${path} 错误:`, err);
-        }
+    savePies() {
+        for (const control of this.controller.values()) MiraiPieApp.instance.db?.saveOrUpdatePieRecord({
+            fullId: control.pie.fullId,
+            version: control.pie.version,
+            enabled: control.enabled,
+            path: control.path,
+            configs: control.pie.configs
+        });
     }
 
-    install(pie: Pie) {
-        if (pie.isPie) {
+    install(pie: Pie, options?: {path?: string, enabled?: boolean}) {
+        if (pie?.isPie) {
+            const record = MiraiPieApp.instance.db?.getPieRecord(pie.fullId);
+            if (record) {
+                pie.configs = record.configs as SerializableObject;
+                if (pie.version > record.version && pie.updated) {
+                    makeAsync(pie.updated, pie)(record.version).catch((err) => {
+                        pie.logger.error('调用钩子updated发生错误:', err);
+                    });
+                }
+            }
             this.controller.set(pie.fullId, {
                 pie,
                 enabled: false,
-                exports: pie.exports,
-                configs: pie.configs
+                path: options?.path
             });
             pie.logger.debug('已加载');
             if (pie.installed) {
@@ -305,9 +311,9 @@ export class PieAgent {
                     pie.logger.error('调用钩子installed发生错误:', err);
                 });
             }
-            if (this.autoEnable) this.enable(pie.fullId);
+            if (!options || options?.enabled) this.enable(pie.fullId);
         } else {
-            logger.error(`加载pie失败, 请检查 ${pie.fullId} 是否为一个有效的pie`)
+            logger.error(`加载pie失败, 请检查 ${pie} 是否为一个有效的pie`)
         }
     }
 

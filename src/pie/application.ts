@@ -63,9 +63,6 @@ export class MiraiPieApp {
         this.messageHandlers = [];
         this.eventHandlers = [];
 
-        this.pieAgent = new PieAgent();
-        for (const pie of options.pies || []) this.pieAgent.install(pie);
-
         this.onMessage((chatMessage) => this.pieAgent.messageDispatcher(chatMessage));
         this.onMessage((chatMessage) => {
             this.db?.saveMessage(
@@ -82,8 +79,22 @@ export class MiraiPieApp {
         this.db?.saveAppOptions(options);
         MiraiPieApp.instance = this;
 
+        this.pieAgent = new PieAgent();
+        for (const pie of options.pies || []) this.pieAgent.install(pie);
+
+        const pieRecords = this.db?.getPieRecords();
+        for (const record of pieRecords) {
+            if (record.path) this.pieAgent.install(require(record.path), {path: record.path, enabled: record.enabled});
+        }
+
+        process.on('SIGINT', function () {
+            logger.info('已手动停止运行 (Crtl-C)');
+            process.exit();
+        });
+
         process.on('exit', () => {
-            this.db.close();
+            this.pieAgent.savePies();
+            this.db?.close();
         });
     }
 

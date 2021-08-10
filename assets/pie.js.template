@@ -5,7 +5,7 @@ module.exports = new Pie({
     id: '{{id}}',
     name: '{{name}}',
     author: '',
-    version: [0, 0, 1],
+    version: '1.0.0',
     description: '',
     authorUrl: '',
     projectUrl: '',

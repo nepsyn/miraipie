@@ -1,11 +1,19 @@
 import db from 'better-sqlite3';
-import * as fs from 'fs';
+import fs from 'fs';
 import log4js from 'log4js';
-import {MiraiPieAppOptions, Pie} from '.';
+import {MiraiPieAppOptions} from '.';
 import {ChatMessageType, Event, MessageChain} from '../mirai';
 import {getAssetPath} from '../tool';
 
 const logger = log4js.getLogger('db');
+
+interface PieRecord {
+    fullId: string;
+    version: string;
+    enabled: boolean;
+    path: string;
+    configs: object;
+}
 
 export abstract class DatabaseAdapter {
     readonly type: string;
@@ -23,9 +31,13 @@ export abstract class DatabaseAdapter {
 
     abstract saveEvent(event: Event): boolean;
 
-    abstract saveOrUpdatePie(pie: Pie, path: string): boolean;
+    abstract saveOrUpdatePieRecord(record: PieRecord): boolean;
 
     abstract getPiePath(fullId: string): string;
+
+    abstract getPieRecords(): PieRecord[];
+
+    abstract getPieRecord(fullId: string): PieRecord;
 
     abstract deletePie(fullId: string);
 
@@ -59,7 +71,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
     }
 
     close() {
-        this.database.close();
+        this.database?.close();
         this.database = null;
     }
 
@@ -79,7 +91,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
     }
 
     loadAppOptions(): MiraiPieAppOptions {
-        const options = this.database.prepare('SELECT * FROM sys').get();
+        const options = this.database?.prepare('SELECT * FROM sys').get();
         if (options) {
             return {
                 id: options.qq,
@@ -117,29 +129,31 @@ export class Sqlite3Adapter extends DatabaseAdapter {
         return resp?.changes > 0;
     }
 
-    saveOrUpdatePie(pie: Pie, path?: string): boolean {
+    saveOrUpdatePieRecord(record: PieRecord): boolean {
         const count = this.database
             ?.prepare('SELECT COUNT(*) FROM pie WHERE full_id=?')
             .pluck()
-            .get(pie.fullId);
+            .get(record.fullId);
         if (count > 0) {
             const resp = this.database
-                ?.prepare('UPDATE pie SET config=$config, data=$data, path=$path WHERE full_id=$fullId')
+                ?.prepare('UPDATE pie SET version=$version, enabled=$enabled, path=$path, configs=$configs WHERE full_id=$fullId')
                 .run({
-                    fullId: pie.fullId,
-                    path,
-                    config: JSON.stringify(pie.configs),
-                    data: JSON.stringify(pie.data)
+                    fullId: record.fullId,
+                    version: record.version,
+                    enabled: record.enabled ? 1 : 0,
+                    path: record.path,
+                    configs: JSON.stringify(record.configs)
                 });
             return resp?.changes > 0;
         } else {
             const resp = this.database
-                ?.prepare('INSERT INTO pie VALUES ($fullId, $path, $config, $data)')
+                ?.prepare('INSERT INTO pie VALUES ($fullId, $version, $enabled, $path, $configs)')
                 .run({
-                    fullId: pie.fullId,
-                    path,
-                    config: JSON.stringify(pie.configs),
-                    data: JSON.stringify(pie.data)
+                    fullId: record.fullId,
+                    version: record.version,
+                    enabled: record.enabled ? 1 : 0,
+                    path: record.path,
+                    configs: JSON.stringify(record.configs)
                 });
             return resp?.changes > 0;
         }
@@ -147,9 +161,31 @@ export class Sqlite3Adapter extends DatabaseAdapter {
 
     getPiePath(fullId: string): string {
         return this.database
-            ?.prepare(`SELECT [path] FROM pie WHERE full_id=?`)
+            ?.prepare(`SELECT path FROM pie WHERE full_id=?`)
             .pluck()
             .get(fullId)
+    }
+
+    getPieRecords(): PieRecord[] {
+        const records = this.database
+            ?.prepare('SELECT * FROM pie')
+            .all();
+        for (const record of records || []) {
+            record.enabled = (record.enabled === 1);
+            record.configs = JSON.parse(record.configs);
+        }
+        return records;
+    }
+
+    getPieRecord(fullId: string): PieRecord {
+        const record = this.database
+            ?.prepare('SELECT * FROM pie WHERE full_id=?')
+            .get(fullId);
+        if (record) {
+            record.enabled = (record.enabled === 1);
+            record.configs = JSON.parse(record.configs);
+        }
+        return record;
     }
 
     deletePie(fullId: string) {

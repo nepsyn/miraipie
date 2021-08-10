@@ -1,9 +1,9 @@
-import * as child_process from 'child_process';
+import {execSync} from 'child_process';
 import {program} from 'commander';
 import {prompt} from 'enquirer';
-import * as fs from 'fs';
+import fs from 'fs';
 import log4js from 'log4js';
-import * as Path from 'path';
+import path from 'path';
 import {MiraiApiHttpAdapterMap} from '../mirai';
 import {createMiraiPieApp, DatabaseAdapter, Sqlite3Adapter} from '../pie';
 import {getAssetPath} from '../tool';
@@ -46,18 +46,26 @@ function useDatabase(path: string): Promise<DatabaseAdapter> {
 }
 
 program
-    .version('miraipie 1.0.0', '-V, --version', '显示版本信息')
+    .version(`miraipie ${require('../../package.json').version}`, '-V, --version', '显示版本信息')
     .option('-d, --db-file <path>', 'miraipie的数据库文件路径', 'miraipie.db')
     .option('-r, --renew', '重置miraipie并重新填写配置')
-    .option('-p, --pie <paths...>', 'miraipie需要额外加载的pie的模块路径')
+    .option('-p, --pies <paths...>', 'miraipie需要额外加载的pie的模块路径')
     .helpOption('-h, --help', '显示帮助信息')
     .action(async (opts) => {
-        const db = new Sqlite3Adapter(opts.dbFile);
+        const db = fs.existsSync(opts.dbFile) ? new Sqlite3Adapter(opts.dbFile) : Sqlite3Adapter.create(opts.dbFile);
         if (db.open && fs.statSync(opts.dbFile).size / Math.pow(2, 30) > 1) {
             logger.warn('数据库文件大小已超过1GB, 建议使用命令 `miraipie clear-history` 清除历史消息记录');
         }
 
         const options = db.loadAppOptions();
+        const pies = (opts.pies || []).map((p) => {
+            try {
+                return require(path.join(process.cwd(), p));
+            } catch (err) {
+                logger.error(`加载额外pie模块路径 ${p} 出错:`, err);
+                return null;
+            }
+        }).filter((pie) => pie !== null);
         if ((!options) || opts.renew) {
             prompt([
                 {
@@ -105,13 +113,14 @@ program
                         host: pro.host,
                         port: parseInt(pro.port)
                     },
-                    db
+                    db,
+                    pies
                 }).listen();
             }).catch((err) => {
                 logger.error(`初始化miraipie服务错误:`, err);
             });
         } else {
-            await createMiraiPieApp({...options, db}).listen();
+            await createMiraiPieApp({...options, db, pies}).listen();
         }
     });
 
@@ -155,16 +164,16 @@ program
                 // 创建package.json
                 let packageContent = fs.readFileSync(getAssetPath('package.json.template')).toString();
                 packageContent = packageContent.replace('{{name}}', pro.name);
-                fs.writeFileSync(Path.join(pro.path, 'package.json'), packageContent);
+                fs.writeFileSync(path.join(pro.path, 'package.json'), packageContent);
                 // 创建pie文件
                 let pieContent = fs.readFileSync(getAssetPath('pie.js.template')).toString();
                 pieContent = pieContent
                     .replace('{{namespace}}', pro.namespace)
                     .replace('{{id}}', pro.id)
                     .replace('{{name}}', pro.name);
-                fs.writeFileSync(Path.join(pro.path, 'index.js'), pieContent);
+                fs.writeFileSync(path.join(pro.path, 'index.js'), pieContent);
                 // 调用npm初始化
-                child_process.execSync(`cd ${pro.path} && npm install`);
+                execSync(`cd ${pro.path} && npm install`);
 
                 logger.info('创建pie项目完成');
             } catch (err) {

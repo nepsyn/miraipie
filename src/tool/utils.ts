@@ -1,4 +1,4 @@
-import * as Path from 'path';
+import path from 'path';
 
 export function makeReadonly<T extends object>(target: T): T {
     if (target) {
@@ -28,5 +28,5 @@ export async function sleep(ms: number = 100): Promise<void> {
 }
 
 export function getAssetPath(name: string): string {
-    return Path.normalize(Path.join(__dirname, `../../assets/${name}`));
+    return path.normalize(path.join(__dirname, `../../assets/${name}`));
 }
