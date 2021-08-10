@@ -12,6 +12,7 @@ import {
     Image,
     Json,
     MessageChain,
+    MiraiCode,
     MusicShare,
     Plain,
     Poke,
@@ -152,6 +153,14 @@ export function File(id: string, name: string, size: number): File {
     return {
         type: 'File',
         id, name, size,
+        toDisplayString, toMiraiCode
+    };
+}
+
+export function MiraiCode(code: string): MiraiCode {
+    return {
+        type: 'MiraiCode',
+        code,
         toDisplayString, toMiraiCode
     };
 }

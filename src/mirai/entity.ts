@@ -19,6 +19,11 @@ export interface FileOverview {
     contact: Contact;
     isFile: boolean;
     isDirectory: boolean;
+    downloadInfo?: {
+        sha1: string;
+        md5: string;
+        url: string;
+    }
 }
 
 export interface GroupConfig {

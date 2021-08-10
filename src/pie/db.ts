@@ -33,8 +33,6 @@ export abstract class DatabaseAdapter {
 
     abstract saveOrUpdatePieRecord(record: PieRecord): boolean;
 
-    abstract getPiePath(fullId: string): string;
-
     abstract getPieRecords(): PieRecord[];
 
     abstract getPieRecord(fullId: string): PieRecord;
@@ -157,13 +155,6 @@ export class Sqlite3Adapter extends DatabaseAdapter {
                 });
             return resp?.changes > 0;
         }
-    }
-
-    getPiePath(fullId: string): string {
-        return this.database
-            ?.prepare(`SELECT path FROM pie WHERE full_id=?`)
-            .pluck()
-            .get(fullId)
     }
 
     getPieRecords(): PieRecord[] {

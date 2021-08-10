@@ -201,12 +201,12 @@ program
     .description('删除已添加的pie')
     .action((fullId: string) => {
         useDatabase(program.opts().dbFile).then((db) => {
-            const path = db.getPiePath(fullId);
-            if (path) {
-                if (program.opts().hard && fs.existsSync(path)) {
-                    const stat = fs.statSync(path);
-                    if (stat.isDirectory()) fs.rmdirSync(path);
-                    else fs.unlinkSync(path);
+            const record = db.getPieRecord(fullId);
+            if (record) {
+                if (program.opts().hard && fs.existsSync(record.path)) {
+                    const stat = fs.statSync(record.path);
+                    if (stat.isDirectory()) fs.rmdirSync(record.path);
+                    else fs.unlinkSync(record.path);
                 }
                 db.deletePie(fullId);
                 logger.info(`已删除pie '${fullId}'`);

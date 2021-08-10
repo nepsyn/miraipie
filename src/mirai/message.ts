@@ -95,12 +95,13 @@ export function toMiraiCode<T extends SingleMessage>(this: T): string {
     else if (isType(this, 'MusicShare')) return `[mirai:musicshare:${this.kind},${this.title},${this.summary},${this.jumpUrl},${this.pictureUrl},${this.musicUrl},${this.brief}]`;
     else if (isType(this, 'ForwardMessage')) return `[mirai:forward:${this.nodeList.length}]`;
     else if (isType(this, 'File')) return `[mirai:file:${this.id},${this.name},${this.size}]`;
+    else if (isType(this, 'MiraiCode')) return this.code;
     else return `[mirai:unknown]`;
 }
 
 export function toDisplayString<T extends SingleMessage>(this: T): string {
     if (isType(this, 'Quote')) return `[回复]${this.origin.toString()}`;
-    else if (isType(this, 'At')) return `@${this.display || this.target}`;
+    else if (isType(this, 'At')) return `@${this.target}`;
     else if (isType(this, 'AtAll')) return `@全体成员`;
     else if (isType(this, 'Face')) return `[${this.name || '表情'}]`;
     else if (isType(this, 'Plain')) return `${this.text}`;
@@ -238,6 +239,11 @@ export interface File extends SingleMessage {
     size: number;
 }
 
+export interface MiraiCode extends SingleMessage {
+    type: 'MiraiCode';
+    code: string;
+}
+
 export type SingleMessageMap = {
     Source: Source,
     Quote: Quote,
@@ -255,7 +261,8 @@ export type SingleMessageMap = {
     Dice: Dice,
     MusicShare: MusicShare,
     ForwardMessage: ForwardMessage,
-    File: File
+    File: File,
+    MiraiCode: MiraiCode
 };
 
 export type SingleMessageType = keyof SingleMessageMap;

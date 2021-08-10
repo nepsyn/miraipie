@@ -95,9 +95,9 @@ export interface MiraiApiHttpAdapterApi {
 
     handleBotInvitedJoinGroupRequest?(eventId: number, fromId: number, groupId: number, operate: number, message: string): Promise<ApiResponse>;
 
-    getGroupFileList?(parentFileId: string, groupId: number): Promise<FileListResponse>;
+    getGroupFileList?(parentFileId: string, groupId: number, withDownloadInfo?: boolean): Promise<FileListResponse>;
 
-    getGroupFileInfo?(fileId: string, groupId: number): Promise<FileInfoResponse>;
+    getGroupFileInfo?(fileId: string, groupId: number, withDownloadInfo?: boolean): Promise<FileInfoResponse>;
 
     createGroupFileDirectory?(parentFileId: string, directoryName: string, groupId: number): Promise<FileInfoResponse>;
 

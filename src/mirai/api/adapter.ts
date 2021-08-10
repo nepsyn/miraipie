@@ -221,12 +221,12 @@ export class HttpAdapter implements MiraiApiHttpAdapterApi {
         return this.post('recall', {target: messageId});
     }
 
-    async getGroupFileList(parentFileId: string, groupId: number): Promise<FileListResponse> {
-        return this.get('/file/list', {id: parentFileId, group: groupId});
+    async getGroupFileList(parentFileId: string, groupId: number, withDownloadInfo: boolean = false): Promise<FileListResponse> {
+        return this.get('/file/list', {id: parentFileId, group: groupId, withDownloadInfo});
     }
 
-    async getGroupFileInfo(fileId: string, groupId: number): Promise<FileInfoResponse> {
-        return this.get('file/info', {id: fileId, group: groupId});
+    async getGroupFileInfo(fileId: string, groupId: number, withDownloadInfo: boolean = false): Promise<FileInfoResponse> {
+        return this.get('file/info', {id: fileId, group: groupId, withDownloadInfo});
     }
 
     async createGroupFileDirectory(parentFileId: string, directoryName: string, groupId: number): Promise<FileInfoResponse> {
@@ -407,7 +407,7 @@ export class WebsocketAdapter implements MiraiApiHttpAdapterApi {
                     const data = message.data;
                     if ('type' in data) {
                         if (data.type.endsWith('Message')) this.messageHandler(data as ChatMessage);
-                        else if ( data.type.endsWith('Event')) this.eventHandler(data as Event);
+                        else if (data.type.endsWith('Event')) this.eventHandler(data as Event);
                     } else if ('code' in data) {
                         if (data.code === ResponseCode.Success) {
                             this.isListening = true;
@@ -494,12 +494,12 @@ export class WebsocketAdapter implements MiraiApiHttpAdapterApi {
         return await this.request('recall', {target: messageId});
     }
 
-    async getGroupFileList(parentFileId: string, groupId: number): Promise<FileListResponse> {
-        return await this.request('file_list', {id: parentFileId, target: groupId});
+    async getGroupFileList(parentFileId: string, groupId: number, withDownloadInfo: boolean = false): Promise<FileListResponse> {
+        return await this.request('file_list', {id: parentFileId, target: groupId, withDownloadInfo});
     }
 
-    async getGroupFileInfo(fileId: string, groupId: number): Promise<FileInfoResponse> {
-        return await this.request('file_info', {id: fileId, target: groupId});
+    async getGroupFileInfo(fileId: string, groupId: number, withDownloadInfo: boolean = false): Promise<FileInfoResponse> {
+        return await this.request('file_info', {id: fileId, target: groupId, withDownloadInfo});
     }
 
     async createGroupFileDirectory(parentFileId: string, directoryName: string, groupId: number): Promise<FileInfoResponse> {
