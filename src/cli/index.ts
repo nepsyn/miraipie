@@ -4,7 +4,7 @@ import {prompt} from 'enquirer';
 import fs from 'fs';
 import log4js from 'log4js';
 import path from 'path';
-import {MiraiApiHttpAdapterMap} from '../mirai';
+import {ChatMessage, Event, Friend, GroupMember, MiraiApiHttpAdapterMap} from '../mirai';
 import {createMiraiPieApp, DatabaseAdapter, Sqlite3Adapter} from '../pie';
 import {getAssetPath} from '../tool';
 
@@ -16,8 +16,8 @@ log4js.configure({
             type: 'console'
         },
         file: {
-            type: 'file',
-            filename: 'miraipie.log',
+            type: 'dateFile',
+            filename: 'log/miraipie.log',
         }
     },
     categories: {
@@ -45,11 +45,29 @@ function useDatabase(path: string): Promise<DatabaseAdapter> {
     });
 }
 
+function logMessage(chatMessage: ChatMessage) {
+    if (chatMessage.type === 'FriendMessage') {
+        const sender = chatMessage.sender as Friend;
+        logger.info(`${sender.nickname}(${sender.id}) -> ${chatMessage.messageChain.toDisplayString()}`);
+    } else if (chatMessage.type === 'GroupMessage') {
+        const sender = chatMessage.sender as GroupMember;
+        logger.info(`[${sender.group.name}(${sender.group.id})] ${sender.memberName}(${sender.id}) -> ${chatMessage.messageChain.toDisplayString()}`);
+    } else if (chatMessage.type === 'TempMessage') {
+        const sender = chatMessage.sender as GroupMember;
+        logger.info(`${sender.memberName}(${sender.id}) -> ${chatMessage.messageChain.toDisplayString()}`);
+    }
+}
+
+function logEvent(event: Event) {
+    logger.info(`${event.type}: ${JSON.stringify(event)}`);
+}
+
 program
     .version(`miraipie ${require('../../package.json').version}`, '-V, --version', '显示版本信息')
     .option('-d, --db-file <path>', 'miraipie的数据库文件路径', 'miraipie.db')
     .option('-r, --renew', '重置miraipie并重新填写配置')
     .option('-p, --pies <paths...>', 'miraipie需要额外加载的pie的模块路径')
+    .option('-v, --verbose', '打印miraipie接收到的消息和事件')
     .helpOption('-h, --help', '显示帮助信息')
     .action(async (opts) => {
         const db = fs.existsSync(opts.dbFile) ? new Sqlite3Adapter(opts.dbFile) : Sqlite3Adapter.create(opts.dbFile);
@@ -104,8 +122,8 @@ program
                     message: '请输入mirai-api-http配置项中的verifyKey',
                 }
             ]).then(async (pro: any) => {
-                await createMiraiPieApp({
-                    id: pro.qq,
+                const app = createMiraiPieApp({
+                    qq: pro.qq,
                     adapter: pro.adapter,
                     listenerAdapter: pro.listenerAdapter,
                     adapterSetting: {
@@ -115,12 +133,22 @@ program
                     },
                     db,
                     pies
-                }).listen();
+                });
+                if (opts.verbose) {
+                    app.onMessage(logMessage);
+                    app.onEvent(logEvent);
+                }
+                await app.listen();
             }).catch((err) => {
                 logger.error(`初始化miraipie服务错误:`, err);
             });
         } else {
-            await createMiraiPieApp({...options, db, pies}).listen();
+            const app = createMiraiPieApp({...options, db, pies});
+            if (opts.verbose) {
+                app.onMessage(logMessage);
+                app.onEvent(logEvent);
+            }
+            await app.listen();
         }
     });
 
@@ -208,7 +236,7 @@ program
                     if (stat.isDirectory()) fs.rmdirSync(record.path);
                     else fs.unlinkSync(record.path);
                 }
-                db.deletePie(fullId);
+                db.deletePieRecord(fullId);
                 logger.info(`已删除pie '${fullId}'`);
             } else {
                 logger.warn(`未找到pie '${fullId}'`)

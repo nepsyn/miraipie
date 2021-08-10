@@ -1,4 +1,4 @@
-import {Contact, Friend, Group, GroupMember, MessageChain, OtherClient} from '.';
+import {Contact, Friend, GroupMember, MessageChain, OtherClient} from '.';
 
 export interface ChatMessage {
     readonly type: ChatMessageType;
@@ -13,7 +13,7 @@ export interface FriendMessage extends ChatMessage {
 
 export interface GroupMessage extends ChatMessage {
     type: 'GroupMessage';
-    sender: Group;
+    sender: GroupMember;
 }
 
 export interface TempMessage extends ChatMessage {

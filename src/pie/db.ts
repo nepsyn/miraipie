@@ -2,45 +2,120 @@ import db from 'better-sqlite3';
 import fs from 'fs';
 import log4js from 'log4js';
 import {MiraiPieAppOptions} from '.';
-import {ChatMessageType, Event, MessageChain} from '../mirai';
+import {ChatMessageType, Event, MessageChain, SingleMessage} from '../mirai';
 import {getAssetPath} from '../tool';
 
 const logger = log4js.getLogger('db');
 
+/**
+ * 数据库中pie记录
+ */
 interface PieRecord {
+    /**
+     * pie全限定名
+     */
     fullId: string;
+    /**
+     * pie版本号
+     */
     version: string;
+    /**
+     * pie是否启用
+     */
     enabled: boolean;
+    /**
+     * pie模块路径
+     */
     path: string;
+    /**
+     * pie用户配置
+     */
     configs: object;
 }
 
+/**
+ * 数据库adapter
+ */
 export abstract class DatabaseAdapter {
+    /**
+     * adapter类型
+     */
     readonly type: string;
+    /**
+     * 是否已打卡
+     */
     abstract open: boolean;
 
+    /**
+     * 创建新的数据库
+     */
     static create: (path: string) => DatabaseAdapter;
 
+    /**
+     * 关闭当前数据库
+     */
     abstract close();
 
+    /**
+     * 保存miraipie应用信息
+     * @param options 应用信息
+     */
     abstract saveAppOptions(options: MiraiPieAppOptions): boolean;
 
+    /**
+     * 获取miraipie应用信息
+     */
     abstract loadAppOptions(): MiraiPieAppOptions;
 
-    abstract saveMessage(sourceId: number, messageChain: MessageChain, from: number, to: number, type: ChatMessageType): boolean;
+    /**
+     * 保存一条消息
+     * @param sourceId 消息id
+     * @param messageChain 消息链
+     * @param from 消息发送人QQ号
+     * @param to 消息接收账号
+     * @param type 消息类型
+     */
+    abstract saveMessage(sourceId: number, messageChain: MessageChain | SingleMessage[], from: number, to: number, type: ChatMessageType): boolean;
 
+    /**
+     * 保存一个事件
+     * @param event 事件
+     */
     abstract saveEvent(event: Event): boolean;
 
+    /**
+     * 保存或更新pie记录
+     * @param record pie记录
+     */
     abstract saveOrUpdatePieRecord(record: PieRecord): boolean;
 
+    /**
+     * 获取所有pie记录
+     */
     abstract getPieRecords(): PieRecord[];
 
+    /**
+     * 获取指定全限定名pie
+     * @param fullId pie全限定名
+     */
     abstract getPieRecord(fullId: string): PieRecord;
 
-    abstract deletePie(fullId: string);
+    /**
+     * 删除指定全限定名pie记录
+     * @param fullId pie全限定名
+     */
+    abstract deletePieRecord(fullId: string);
 
+    /**
+     * 删除历史消息
+     * @param days 和当前日期相差天数
+     */
     abstract clearMessageHistory(days: number): number;
 
+    /**
+     * 删除历史事件
+     * @param days 和当前日期相差天数
+     */
     abstract clearEventHistory(days: number): number;
 }
 
@@ -78,7 +153,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
         const resp = this.database
             ?.prepare('INSERT INTO sys VALUES ($qq, $adapterName, $listenerAdapterName, $verifyKey, $host, $port)')
             .run({
-                qq: options.id,
+                qq: options.qq,
                 adapterName: options.adapter,
                 listenerAdapterName: options.listenerAdapter,
                 verifyKey: options.adapterSetting.verifyKey,
@@ -92,7 +167,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
         const options = this.database?.prepare('SELECT * FROM sys').get();
         if (options) {
             return {
-                id: options.qq,
+                qq: options.qq,
                 adapter: options.adapter_name,
                 listenerAdapter: options.listener_adapter_name,
                 adapterSetting: {
@@ -104,12 +179,12 @@ export class Sqlite3Adapter extends DatabaseAdapter {
         }
     }
 
-    saveMessage(sourceId: number, messageChain: MessageChain, from: number, to: number, type: ChatMessageType): boolean {
+    saveMessage(sourceId: number, messageChain: MessageChain | SingleMessage[], from: number, to: number, type: ChatMessageType): boolean {
         const resp = this.database
             ?.prepare('INSERT INTO message (id, content, from_id, to_id, type) VALUES ($sourceId, $content, $from_id, $to_id, $type)')
             .run({
                 sourceId,
-                content: JSON.stringify(messageChain.dropped('Source')),
+                content: JSON.stringify(MessageChain.from(messageChain).dropped('Source')),
                 from_id: from,
                 to_id: to,
                 type
@@ -179,7 +254,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
         return record;
     }
 
-    deletePie(fullId: string) {
+    deletePieRecord(fullId: string) {
         this.database
             ?.prepare('DELETE FROM pie WHERE full_id=?')
             .run(fullId);

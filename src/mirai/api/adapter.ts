@@ -38,6 +38,10 @@ type MiraiApiHttpAdapterSetting = MiraiApiHttpClientSetting & {
     eventHandler?: EventHandler
 };
 
+/**
+ * mirai-api-http 提供的 http adapter<br/>
+ * <a href="https://github.com/project-mirai/mirai-api-http/blob/master/docs/adapter/HttpAdapter.md">文档<a/>
+ */
 export class HttpAdapter implements MiraiApiHttpAdapterApi {
     readonly type = 'HttpAdapter';
     setting: MiraiApiHttpClientSetting;
@@ -58,15 +62,18 @@ export class HttpAdapter implements MiraiApiHttpAdapterApi {
     }
 
     private async request<T>(uri: string, data: object, method: 'GET' | 'POST', requireSession: boolean = true, multipart: boolean = false): Promise<T> {
+        // 构造axios请求config
         const config: AxiosRequestConfig = {
             method,
             url: `http://${this.setting.host}:${this.setting.port}/${uri}`,
             headers: {}
         };
 
+        // 判断请求类型
         if (method === 'POST') config.data = data;
         else config.params = data;
         if (multipart) config.headers = (data as FormData).getHeaders();
+        // 判断是否需要session
         if (requireSession) {
             if (!this.session) {
                 await this.verify();
@@ -76,6 +83,7 @@ export class HttpAdapter implements MiraiApiHttpAdapterApi {
             config.headers.sessionKey = this.session;
         }
 
+        // 发送请求
         try {
             const resp = (await axios.request<T>(config)).data;
             if ('code' in resp && resp['code'] !== ResponseCode.Success) {
@@ -108,12 +116,12 @@ export class HttpAdapter implements MiraiApiHttpAdapterApi {
     }
 
     async bind(qq?: number): Promise<ApiResponse> {
-        const id = qq || MiraiPieApp.instance.id;
+        const id = qq || MiraiPieApp.instance.qq;
         return this.post<ApiResponse>('bind', {sessionKey: this.session, qq: id}, false);
     }
 
     async release(qq?: number): Promise<ApiResponse> {
-        const id = qq || MiraiPieApp.instance.id;
+        const id = qq || MiraiPieApp.instance.qq;
         return new Promise<ApiResponse>((resolve, reject) => {
             this.post<ApiResponse>('release', {sessionKey: this.session, qq: id}, false).then((res) => {
                 this.session = null;
@@ -221,8 +229,8 @@ export class HttpAdapter implements MiraiApiHttpAdapterApi {
         return this.post('recall', {target: messageId});
     }
 
-    async getGroupFileList(parentFileId: string, groupId: number, withDownloadInfo: boolean = false): Promise<FileListResponse> {
-        return this.get('/file/list', {id: parentFileId, group: groupId, withDownloadInfo});
+    async getGroupFileList(parentFileId: string, groupId: number, offset: number = 0, size: number = 100, withDownloadInfo: boolean = false): Promise<FileListResponse> {
+        return this.get('/file/list', {id: parentFileId, group: groupId, offset, size, withDownloadInfo});
     }
 
     async getGroupFileInfo(fileId: string, groupId: number, withDownloadInfo: boolean = false): Promise<FileInfoResponse> {
@@ -334,13 +342,17 @@ export class HttpAdapter implements MiraiApiHttpAdapterApi {
     }
 }
 
+/**
+ * mirai-api-http 提供的 websocket adapter<br/>
+ * <a href="https://github.com/project-mirai/mirai-api-http/blob/master/docs/adapter/WebsocketAdapter.md">文档<a/>
+ */
 export class WebsocketAdapter implements MiraiApiHttpAdapterApi {
     readonly type = 'WebsocketAdapter';
     setting: MiraiApiHttpClientSetting;
     isListening: boolean;
-    private ws: WebSocket;
-    private queue: Map<number, ApiResponse>;
-    private syncIdGenerator: Generator;
+    private ws: WebSocket;  // websocket连接
+    private queue: Map<number, ApiResponse>;  // 请求响应队列
+    private syncIdGenerator: Generator;  // syncId生成器
     messageHandler?: MessageHandler;
     eventHandler?: EventHandler;
 
@@ -367,23 +379,28 @@ export class WebsocketAdapter implements MiraiApiHttpAdapterApi {
     }
 
     private async request<T extends ApiResponse>(command: string, content: object = {}, subCommand: string = null): Promise<T> {
+        // 生成syncId
         const syncId = this.syncIdGenerator.next().value;
+        // 判断是否正在监听
         if (!this.isListening) {
             await this.listen();
             await sleep(1000);
         }
         if (this.isListening) {
+            // 构造请求对象
             const data = {syncId, command, subCommand, content};
             this.ws.send(JSON.stringify(data), (err) => {
                 if (err) logger.error('发送请求错误, 请求原始数据:', data, err);
             });
 
+            // 等待响应
             let timeOutCounter = 0;
             while (!this.queue.has(syncId) && timeOutCounter < 20) {
                 await sleep(100);
                 timeOutCounter++;
             }
 
+            // 返回响应
             const resp = this.queue.get(syncId);
             if (resp) {
                 this.queue.delete(syncId);
@@ -396,7 +413,7 @@ export class WebsocketAdapter implements MiraiApiHttpAdapterApi {
 
     async listen(qq?: number) {
         if (!this.isListening) {
-            const id = qq || MiraiPieApp.instance.id;
+            const id = qq || MiraiPieApp.instance.qq;
             this.ws = new WebSocket(`ws://${this.setting.host}:${this.setting.port}/all?verifyKey=${this.setting.verifyKey}&qq=${id}`);
             this.ws.on('error', (err) => {
                 logger.error(`WebsocketAdapter 监听器启动错误:`, err);
@@ -494,8 +511,8 @@ export class WebsocketAdapter implements MiraiApiHttpAdapterApi {
         return await this.request('recall', {target: messageId});
     }
 
-    async getGroupFileList(parentFileId: string, groupId: number, withDownloadInfo: boolean = false): Promise<FileListResponse> {
-        return await this.request('file_list', {id: parentFileId, target: groupId, withDownloadInfo});
+    async getGroupFileList(parentFileId: string, groupId: number, offset: number = 0, size: number = 100, withDownloadInfo: boolean = false): Promise<FileListResponse> {
+        return await this.request('file_list', {id: parentFileId, target: groupId, offset, size, withDownloadInfo});
     }
 
     async getGroupFileInfo(fileId: string, groupId: number, withDownloadInfo: boolean = false): Promise<FileInfoResponse> {
