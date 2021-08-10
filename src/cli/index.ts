@@ -181,13 +181,23 @@ program
                 type: 'input',
                 name: 'path',
                 message: '请输入存放位置',
-                initial: `${id || 'pie'}/`
+                initial: `pies/${id || 'pie'}/`
             }
-        ]).then((pro: any) => {
+        ]).then(async (pro: any) => {
             try {
                 // 创建文件夹
                 if (!fs.existsSync(pro.path)) {
-                    fs.mkdirSync(pro.path);
+                    fs.mkdirSync(pro.path, {recursive: true});
+                } else {
+                    const proConfirm: any = await prompt({
+                        type: 'confirm',
+                        name: 'confirm',
+                        message: `指定目录 ${pro.path} 已存在, 是否覆盖文件夹?`,
+                    });
+                    if (!proConfirm.confirm) {
+                        logger.info('已取消创建项目操作');
+                        return;
+                    }
                 }
                 // 创建package.json
                 let packageContent = fs.readFileSync(getAssetPath('package.json.template')).toString();
