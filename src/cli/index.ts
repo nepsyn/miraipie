@@ -58,15 +58,37 @@ function addLocalPie(p: string, db: DatabaseAdapter) {
                 logger.info(`指定pie '${pie.fullId}' 已存在于数据库中`);
             }
         } else {
-            // 数据库中添加记录
-            db.saveOrUpdatePieRecord({
-                fullId: pie.fullId,
-                version: pie.version,
-                enabled: true,
-                path: p,
-                configs: pie.configs
+            const configProps = Object.keys(pie.userConfigMeta);
+            const queries = configProps.map((prop) => {
+                const meta = pie.userConfigMeta[prop];
+                return {
+                    type: 'input',
+                    name: prop,
+                    message: `请输入配置项 - ${prop}` + (meta.description ? `(${meta.description})` : ''),
+                    initial: JSON.stringify(meta.default)
+                }
             });
-            logger.info(`成功添加pie '${pie.fullId}'`);
+            prompt(queries).then((pro) => {
+                for (const prop of configProps) {
+                    try {
+                        pro[prop] = pie.userConfigMeta[prop].type(JSON.parse(pro[prop] || 'null'));
+                    } catch (err) {
+                        pro[prop] = null;
+                        logger.error(`配置项 '${prop}' 初始化出错:`, err.message);
+                    }
+                }
+                // 数据库中添加记录
+                db.saveOrUpdatePieRecord({
+                    fullId: pie.fullId,
+                    version: pie.version,
+                    enabled: true,
+                    path: p,
+                    configs: pro
+                });
+                logger.info(`成功添加pie '${pie.fullId}'`);
+            }).catch(() => {
+                logger.info(`已取消添加pie '${pie.fullId}'`);
+            });
         }
     } catch (err) {
         logger.error(`添加pie模块 ${p} 失败:`, err.message);
@@ -258,7 +280,6 @@ program
             const absPath = path.isAbsolute(p) ? p : path.join(process.cwd(), p);
             if (fs.existsSync(absPath)) {  // 路径本地存在
                 addLocalPie(absPath, db);
-                db.close();
             } else {  // 本地不存在
                 prompt({
                     type: 'input',
@@ -271,8 +292,6 @@ program
                         addLocalPie(path.isAbsolute(pro.dest) ? pro.dest : path.join(process.cwd(), pro.dest), db);
                     } catch (err) {
                         logger.error('调用git clone远程仓库出错:', err.message);
-                    } finally {
-                        db.close();
                     }
                 }).catch(() => {
                     logger.info('已取消克隆远程仓库');
@@ -299,7 +318,6 @@ program
             } else {
                 logger.info(`当前数据库中无已添加${opts.listEnabled ? '且启用' : ''}的pie信息`);
             }
-            db.close();
         });
     });
 
@@ -315,7 +333,6 @@ program
             } else {
                 logger.error(`数据库中没有pie '${fullId}'`)
             }
-            db.close();
         });
     });
 
@@ -331,7 +348,6 @@ program
             } else {
                 logger.error(`数据库中没有pie '${fullId}'`)
             }
-            db.close();
         });
     });
 
@@ -352,7 +368,6 @@ program
             } else {
                 logger.error(`数据库中没有pie '${fullId}'`)
             }
-            db.close();
         });
     });
 
@@ -374,9 +389,7 @@ program
                     const eventCount = db.clearEventHistory(days);
                     logger.info(`已删除${days}天前的 ${messageCount} 条消息记录, ${eventCount} 条事件记录`);
                 }
-                db.close();
             }).catch(() => {
-                db.close();
             });
         });
     });

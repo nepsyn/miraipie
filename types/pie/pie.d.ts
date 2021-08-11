@@ -15,9 +15,7 @@ declare type SerializableObject = {
  * 配置类型
  */
 declare type ConfigConstructor<T = SerializableType> = {
-    new (...args: any[]): T & {};
-} | {
-    (): T;
+    (...args: any[]): T;
 };
 /**
  * 用户配置元声明
@@ -28,10 +26,6 @@ interface UserConfigMeta<T = SerializableType> {
          * 配置类型
          */
         type: ConfigConstructor<T>;
-        /**
-         * 是否必要
-         */
-        required?: boolean;
         /**
          * 配置描述
          */
@@ -118,8 +112,7 @@ export interface PieOptions {
      *     },
      *     step: {
      *         type: Number,
-     *         description: '累加器步长',
-     *         required: true
+     *         description: '累加器步长'
      *     }
      * }
      */
