@@ -1,7 +1,7 @@
 {
   "name": "miraipie",
   "version": "1.0.0",
-  "description": "the most flexible plugin development framework for mirai-api-http",
+  "description": "the most powerful nodejs development kit for mirai-api-http",
   "main": "lib/miraipie.js",
   "types": "types/miraipie.d.ts",
   "scripts": {

@@ -1,0 +1,10 @@
+{
+  "qq": 747337480,
+  "adapterSetting": {
+    "verifyKey": "verify key",
+    "host": "127.0.0.1",
+    "port": 23333
+  },
+  "adapter": "HttpAdapter",
+  "listenerAdapter": "WebsocketAdapter"
+}

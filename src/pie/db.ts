@@ -192,14 +192,16 @@ export class Sqlite3Adapter extends DatabaseAdapter {
     }
 
     loadAppOptions(): MiraiPieAppOptions {
-        const options = this.database?.prepare('SELECT * FROM sys').get();
+        const options = this.database
+            ?.prepare('SELECT qq, adapter_name adapterName, listener_adapter_name listenerAdapterName, verify_key verifyKey, host, port FROM sys')
+            .get();
         if (options) {
             return {
                 qq: options.qq,
-                adapter: options.adapter_name,
-                listenerAdapter: options.listener_adapter_name,
+                adapter: options.adapterName,
+                listenerAdapter: options.listenerAdapterName,
                 adapterSetting: {
-                    verifyKey: options.verify_key,
+                    verifyKey: options.verifyKey,
                     host: options.host,
                     port: options.port
                 }
@@ -209,12 +211,12 @@ export class Sqlite3Adapter extends DatabaseAdapter {
 
     saveMessage(record: MessageRecord): boolean {
         const resp = this.database
-            ?.prepare('INSERT INTO message (id, content, from_id, to_id, type) VALUES ($sourceId, $content, $from_id, $to_id, $type)')
+            ?.prepare('INSERT INTO message (id, content, from_id, to_id, type) VALUES ($sourceId, $content, $fromId, $toId, $type)')
             .run({
                 sourceId: record.sourceId,
                 content: JSON.stringify(MessageChain.from(record.messageChain).dropped('Source')),
-                from_id: record.from,
-                to_id: record.to,
+                fromId: record.from,
+                toId: record.to,
                 type: record.type
             });
         return resp?.changes > 0;
