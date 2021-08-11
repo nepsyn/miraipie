@@ -134,7 +134,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
                 fileMustExist: true
             });
         } catch (err) {
-            logger.error(`打开数据库文件 ${path} 出错:`, err);
+            logger.error(`打开数据库文件 ${path} 出错:`, err.message);
         }
     }
 
@@ -234,7 +234,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
 
     getPieRecords(): PieRecord[] {
         const records = this.database
-            ?.prepare('SELECT * FROM pie')
+            ?.prepare('SELECT full_id AS fullId, version, enabled, path, configs FROM pie')
             .all();
         for (const record of records || []) {
             record.enabled = (record.enabled === 1);
@@ -245,7 +245,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
 
     getPieRecord(fullId: string): PieRecord {
         const record = this.database
-            ?.prepare('SELECT * FROM pie WHERE full_id=?')
+            ?.prepare('SELECT full_id AS fullId, version, enabled, path, configs FROM pie WHERE full_id=?')
             .get(fullId);
         if (record) {
             record.enabled = (record.enabled === 1);

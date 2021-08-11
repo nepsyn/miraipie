@@ -140,7 +140,7 @@ export class MiraiPieApp {
                 try {
                     this.pieAgent.install(require(record.path), {path: record.path, enabled: record.enabled});
                 } catch (err) {
-                    logger.error(`加载pie模块路径 ${record.path} 出错:`, err);
+                    logger.error(`加载pie模块路径 ${record.path} 出错:`, err.message);
                 }
             }
         }
@@ -188,7 +188,7 @@ export class MiraiPieApp {
         chatMessage.messageChain = MessageChain.from(chatMessage.messageChain);
         for (const handler of this.messageHandlers) {
             makeAsync(handler)(makeReadonly(chatMessage)).catch((err) => {
-                logger.error(`调用消息处理器 '${handler.name}' 时发生错误:`, err)
+                logger.error(`调用消息处理器 '${handler.name}' 时发生错误:`, err.message)
             });
         }
     }
@@ -200,7 +200,7 @@ export class MiraiPieApp {
     private async eventDispatcher(event: Event) {
         for (const handler of this.eventHandlers) {
             makeAsync(handler)(makeReadonly(event)).catch((err) => {
-                logger.error(`调用事件处理器 '${handler.name}' 时发生错误:`, err);
+                logger.error(`调用事件处理器 '${handler.name}' 时发生错误:`, err.message);
             });
         }
     }

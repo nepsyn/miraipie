@@ -11,7 +11,7 @@ module.exports = new Pie({
     projectUrl: '',
     dependencies: [],
     keywords: [],
-    filters: [PieFilter.signatureMatch('Hello')],
+    filters: [PieFilter.displayStringEquals('Hello')],
     messageHandler: async (window, chain) => {
         await window.send(chain);
     },

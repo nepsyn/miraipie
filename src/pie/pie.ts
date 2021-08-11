@@ -473,7 +473,7 @@ export class PieFilter {
      */
     static displayStringMatch: PieFilterBuilder = function (regexp: RegExp | string): PieFilter {
         return {
-            sign: `Match(${regexp})`,
+            sign: `DisplayStringMatch(${regexp})`,
             handler: (window, chain) => chain.toDisplayString().match(regexp) !== null
         };
     }
@@ -482,9 +482,9 @@ export class PieFilter {
      * 消息显示串和指定串全等
      * @param displayString 指定字符串
      */
-    static messageEquals: PieFilterBuilder = function (displayString: string): PieFilter {
+    static displayStringEquals: PieFilterBuilder = function (displayString: string): PieFilter {
         return {
-            sign: `MessageEquals(${displayString})`,
+            sign: `DisplayStringEquals(${displayString})`,
             handler: (window, chain) => chain.toDisplayString() === displayString
         }
     }
@@ -597,6 +597,8 @@ export class PieAgent {
      */
     install(pie: Pie, options?: { path?: string, enabled?: boolean }) {
         if (pie?.isPie) {
+            // 防止重复安装
+            if (this.getPie(pie.fullId)?.version === pie.version) return;
             // 获取数据库中记录并还原pie环境
             const record = MiraiPieApp.instance.db?.getPieRecord(pie.fullId);
             if (record) {
@@ -604,7 +606,7 @@ export class PieAgent {
                 // pie版本存在更新
                 if (pie.version > record.version && pie.updated) {
                     makeAsync(pie.updated, pie)(record.version).catch((err) => {
-                        pie.logger.error('调用钩子updated发生错误:', err);
+                        pie.logger.error('调用钩子updated发生错误:', err.message);
                     });
                 }
             }
@@ -618,7 +620,7 @@ export class PieAgent {
             // 调用钩子
             if (pie.installed) {
                 makeAsync(pie.installed, pie)().catch((err) => {
-                    pie.logger.error('调用钩子installed发生错误:', err);
+                    pie.logger.error('调用钩子installed发生错误:', err.message);
                 });
             }
             // 自动启用
@@ -642,7 +644,7 @@ export class PieAgent {
             // 调用钩子
             if (pie.uninstalled) {
                 makeAsync(pie.uninstalled, pie)().catch((err) => {
-                    pie.logger.error('调用钩子uninstalled发生错误:', err);
+                    pie.logger.error('调用钩子uninstalled发生错误:', err.message);
                 });
             }
         }
@@ -661,7 +663,7 @@ export class PieAgent {
             // 调用钩子
             if (pie.enabled) {
                 makeAsync(pie.enabled, pie)().catch((err) => {
-                    pie.logger.error('调用钩子enabled发生错误:', err);
+                    pie.logger.error('调用钩子enabled发生错误:', err.message);
                 });
             }
         }
@@ -680,7 +682,7 @@ export class PieAgent {
             // 调用钩子
             if (pie.disabled) {
                 makeAsync(pie.disabled, pie)().catch((err) => {
-                    pie.logger.error('调用钩子disabled发生错误:', err);
+                    pie.logger.error('调用钩子disabled发生错误:', err.message);
                 });
             }
         }
@@ -710,13 +712,13 @@ export class PieAgent {
                     try {
                         return filter.handler(window, chain, pie);
                     } catch (err) {
-                        pie.logger.error(`执行过滤器 '${filter.sign}' 时发生错误:`, err);
+                        pie.logger.error(`执行过滤器 '${filter.sign}' 时发生错误:`, err.message);
                         return false
                     }
                 });
                 if (pie.messageHandler && passed) {
                     makeAsync(pie.messageHandler, pie)(window, chain).catch((err) => {
-                        pie.logger.error('调用消息处理器发生错误:', err);
+                        pie.logger.error('调用消息处理器发生错误:', err.message);
                     });
                 }
             }
@@ -737,7 +739,7 @@ export class PieAgent {
                 const pie = control.pie;
                 if (pie.eventHandler) {
                     makeAsync(pie.eventHandler, pie)(_event).catch((err) => {
-                        pie.logger.error('调用事件处理器发生错误:', err);
+                        pie.logger.error('调用事件处理器发生错误:', err.message);
                     });
                 }
             }

@@ -91,7 +91,7 @@ export class HttpAdapter implements MiraiApiHttpAdapterApi {
             }
             return resp;
         } catch (err) {
-            logger.error('发送请求错误, 请求原始数据:', data, err);
+            logger.error('发送请求错误, 请求原始数据:', data, err.message);
         }
     }
 
@@ -152,7 +152,7 @@ export class HttpAdapter implements MiraiApiHttpAdapterApi {
                     }
                     first = false;
                 } catch (err) {
-                    logger.log('监听时发生错误:', err);
+                    logger.log('监听时发生错误:', err.message);
                     this.isListening = false;
                 }
                 await sleep(500);
@@ -390,7 +390,7 @@ export class WebsocketAdapter implements MiraiApiHttpAdapterApi {
             // 构造请求对象
             const data = {syncId, command, subCommand, content};
             this.ws.send(JSON.stringify(data), (err) => {
-                if (err) logger.error('发送请求错误, 请求原始数据:', data, err);
+                if (err) logger.error('发送请求错误, 请求原始数据:', data, err.message);
             });
 
             // 等待响应
@@ -416,7 +416,7 @@ export class WebsocketAdapter implements MiraiApiHttpAdapterApi {
             const id = qq || MiraiPieApp.instance.qq;
             this.ws = new WebSocket(`ws://${this.setting.host}:${this.setting.port}/all?verifyKey=${this.setting.verifyKey}&qq=${id}`);
             this.ws.on('error', (err) => {
-                logger.error(`WebsocketAdapter 监听器启动错误:`, err);
+                logger.error(`WebsocketAdapter 监听器启动错误:`, err.message);
             });
             this.ws.on('message', (buffer: Buffer) => {
                 const message: { syncId: string, data: ChatMessage | Event | ApiResponse } = JSON.parse(buffer.toString());

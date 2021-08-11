@@ -5,10 +5,10 @@ import fs from 'fs';
 import log4js from 'log4js';
 import path from 'path';
 import {ChatMessage, Event, Friend, GroupMember, MiraiApiHttpAdapterMap} from '../mirai';
-import {createMiraiPieApp, DatabaseAdapter, Sqlite3Adapter} from '../pie';
+import {createMiraiPieApp, DatabaseAdapter, Pie, Sqlite3Adapter} from '../pie';
 import {getAssetPath} from '../tool';
 
-const logger = log4js.getLogger('cli');
+const logger = log4js.getLogger('console');
 
 log4js.configure({
     appenders: {
@@ -45,6 +45,34 @@ function useDatabase(path: string): Promise<DatabaseAdapter> {
     });
 }
 
+function addLocalPie(p: string, db: DatabaseAdapter) {
+    try {
+        const pie: Pie = require(p);
+        // 数据库检索是否已经存在
+        const record = db.getPieRecord(pie.fullId);
+        if (record) {
+            // 若数据库中版本较旧则更新数据库中模块地址
+            if (pie.version > record.version) {
+                db.saveOrUpdatePieRecord({...record, path: p});
+            } else {
+                logger.info(`指定pie '${pie.fullId}' 已存在于数据库中`);
+            }
+        } else {
+            // 数据库中添加记录
+            db.saveOrUpdatePieRecord({
+                fullId: pie.fullId,
+                version: pie.version,
+                enabled: true,
+                path: p,
+                configs: pie.configs
+            });
+            logger.info(`成功添加pie '${pie.fullId}'`);
+        }
+    } catch (err) {
+        logger.error(`添加pie模块 ${p} 失败:`, err.message);
+    }
+}
+
 function logMessage(chatMessage: ChatMessage) {
     if (chatMessage.type === 'FriendMessage') {
         const sender = chatMessage.sender as Friend;
@@ -65,25 +93,25 @@ function logEvent(event: Event) {
 program
     .version(`miraipie ${require('../../package.json').version}`, '-V, --version', '显示版本信息')
     .option('-d, --db-file <path>', 'miraipie的数据库文件路径', 'miraipie.db')
-    .option('-r, --renew', '重置miraipie并重新填写配置')
-    .option('-p, --pies <paths...>', 'miraipie需要额外加载的pie的模块路径')
-    .option('-v, --verbose', '打印miraipie接收到的消息和事件')
     .helpOption('-h, --help', '显示帮助信息')
+    .addHelpCommand('help [command]', '显示命令帮助');
+
+program
+    .command('start')
+    .description('启动miraipie应用程序')
+    .option('-r, --renew', '重新填写miraipie应用配置')
+    .option('-p, --pies <paths...>', 'miraipie需要额外加载的pie的模块路径')
+    .option('-v, --verbose', '控制台打印miraipie接收到的消息和事件')
     .action(async (opts) => {
-        const db = fs.existsSync(opts.dbFile) ? new Sqlite3Adapter(opts.dbFile) : Sqlite3Adapter.create(opts.dbFile);
-        if (db.open && fs.statSync(opts.dbFile).size / Math.pow(2, 30) > 1) {
+        const db = fs.existsSync(program.opts().dbFile) ? new Sqlite3Adapter(program.opts().dbFile) : Sqlite3Adapter.create(program.opts().dbFile);
+        if (db.open && fs.statSync(program.opts().dbFile).size / Math.pow(2, 30) > 1) {
             logger.warn('数据库文件大小已超过1GB, 建议使用命令 `miraipie clear-history` 清除历史消息记录');
         }
 
         const options = db.loadAppOptions();
-        const pies = (opts.pies || []).map((p) => {
-            try {
-                return require(path.join(process.cwd(), p));
-            } catch (err) {
-                logger.error(`加载额外pie模块路径 ${p} 出错:`, err);
-                return null;
-            }
-        }).filter((pie) => pie !== null);
+        for (const p of opts.pies || []) {
+            addLocalPie(path.isAbsolute(p) ? p : path.join(process.cwd(), p), db);
+        }
         if ((!options) || opts.renew) {
             prompt([
                 {
@@ -131,19 +159,18 @@ program
                         host: pro.host,
                         port: parseInt(pro.port)
                     },
-                    db,
-                    pies
+                    db
                 });
                 if (opts.verbose) {
                     app.onMessage(logMessage);
                     app.onEvent(logEvent);
                 }
                 await app.listen();
-            }).catch((err) => {
-                logger.error(`初始化miraipie服务错误:`, err);
+            }).catch(() => {
+                logger.info('已取消初始化miraipie');
             });
         } else {
-            const app = createMiraiPieApp({...options, db, pies});
+            const app = createMiraiPieApp({...options, db});
             if (opts.verbose) {
                 app.onMessage(logMessage);
                 app.onEvent(logEvent);
@@ -215,7 +242,7 @@ program
 
                 logger.info('创建pie项目完成');
             } catch (err) {
-                logger.error('创建pie项目失败, 错误:', err);
+                logger.error('创建pie项目失败, 错误:', err.message);
             }
         }).catch(() => {
             logger.info('已取消创建pie项目');
@@ -223,33 +250,107 @@ program
     });
 
 program
-    .command('add <full_id>')
+    .command('add <path>')
     .aliases(['get', 'a'])
-    .option('-d, --db-file <path>', 'miraipie的数据库文件路径', 'miraipie.db')
-    .description('从远程或本地添加pie')
-    .action((fullId: string) => {
+    .description('从远程或本地添加pie(远程仓库将使用git克隆)')
+    .action((p: string) => {
+        useDatabase(program.opts().dbFile).then((db) => {
+            const absPath = path.isAbsolute(p) ? p : path.join(process.cwd(), p);
+            if (fs.existsSync(absPath)) {  // 路径本地存在
+                addLocalPie(absPath, db);
+                db.close();
+            } else {  // 本地不存在
+                prompt({
+                    type: 'input',
+                    name: 'dest',
+                    message: '未找到本地模块, 尝试使用git克隆远程仓库到目标文件夹(Ctrl-C取消)',
+                    initial: path.basename(p).split('.')[0]
+                }).then((pro: any) => {
+                    try {
+                        execSync(`git clone ${p} ${pro.dest}`);
+                        addLocalPie(path.isAbsolute(pro.dest) ? pro.dest : path.join(process.cwd(), pro.dest), db);
+                    } catch (err) {
+                        logger.error('调用git clone远程仓库出错:', err.message);
+                    } finally {
+                        db.close();
+                    }
+                }).catch(() => {
+                    logger.info('已取消克隆远程仓库');
+                });
+            }
+        });
+    });
 
+program
+    .command('list-pies')
+    .aliases(['ls', 'list'])
+    .option('-e, --list-enabled', '只显示已启用的pie')
+    .description('显示已添加的pie列表')
+    .action((opts) => {
+        useDatabase(program.opts().dbFile).then((db) => {
+            const records = opts.listEnabled ? db.getPieRecords().filter((record) => record.enabled) : db.getPieRecords();
+            if (records.length > 0) {
+                const header = `${'full_id'.padEnd(32)}${'version'.padEnd(12)}${'enabled'.padEnd(10)}path\n` +
+                    `${'-'.repeat(7).padEnd(32)}${'-'.repeat(7).padEnd(12)}${'-'.repeat(7).padEnd(10)}${'-'.repeat(4)}\n`;
+                const content = records.map((record) => {
+                    return `${record.fullId.padEnd(32)}${record.version.padEnd(12)}${record.enabled.toString().padEnd(10)}${record.path}`;
+                }).join('\n');
+                logger.info(`当前数据库中pie列表:\n${header}${content}`);
+            } else {
+                logger.info(`当前数据库中无已添加${opts.listEnabled ? '且启用' : ''}的pie信息`);
+            }
+            db.close();
+        });
+    });
+
+program
+    .command('enable <full_id>')
+    .description('启用已添加的pie')
+    .action((fullId: string) => {
+        useDatabase(program.opts().dbFile).then((db) => {
+            const record = db.getPieRecord(fullId);
+            if (record) {
+                db.saveOrUpdatePieRecord({...record, enabled: true});
+                logger.info(`已启用 '${fullId}'`);
+            } else {
+                logger.error(`数据库中没有pie '${fullId}'`)
+            }
+            db.close();
+        });
+    });
+
+program
+    .command('disable <full_id>')
+    .description('禁用已添加的pie')
+    .action((fullId: string) => {
+        useDatabase(program.opts().dbFile).then((db) => {
+            const record = db.getPieRecord(fullId);
+            if (record) {
+                db.saveOrUpdatePieRecord({...record, enabled: false});
+                logger.info(`已禁用 '${fullId}'`);
+            } else {
+                logger.error(`数据库中没有pie '${fullId}'`)
+            }
+            db.close();
+        });
     });
 
 program
     .command('delete <full_id>')
     .aliases(['remove', 'rm', 'd'])
-    .option('-d, --db-file <path>', 'miraipie的数据库文件路径', 'miraipie.db')
     .option('-f, --hard', '是否同时删除本地文件')
     .description('删除已添加的pie')
-    .action((fullId: string) => {
+    .action((fullId: string, opts) => {
         useDatabase(program.opts().dbFile).then((db) => {
             const record = db.getPieRecord(fullId);
             if (record) {
-                if (program.opts().hard && fs.existsSync(record.path)) {
-                    const stat = fs.statSync(record.path);
-                    if (stat.isDirectory()) fs.rmdirSync(record.path);
-                    else fs.unlinkSync(record.path);
+                if (opts.hard && fs.existsSync(record.path)) {
+                    fs.rmSync(record.path, {recursive: true, force: true});
                 }
                 db.deletePieRecord(fullId);
                 logger.info(`已删除pie '${fullId}'`);
             } else {
-                logger.warn(`未找到pie '${fullId}'`)
+                logger.error(`数据库中没有pie '${fullId}'`)
             }
             db.close();
         });
@@ -258,7 +359,6 @@ program
 program
     .command('clear-history [days]')
     .aliases(['ch', 'clear'])
-    .option('-d, --db-file <path>', 'miraipie的数据库文件路径', 'miraipie.db')
     .description('删除数据库中消息和事件历史')
     .action((daysString: string) => {
         useDatabase(program.opts().dbFile).then((db) => {
@@ -279,14 +379,6 @@ program
                 db.close();
             });
         });
-    });
-
-program
-    .command('set-repo <url>')
-    .alias('set-repository')
-    .description('设置pie仓库源')
-    .action((url: string) => {
-
     });
 
 program.parse(process.argv);
