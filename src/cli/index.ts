@@ -267,7 +267,7 @@ program
                     initial: path.basename(p).split('.')[0]
                 }).then((pro: any) => {
                     try {
-                        execSync(`git clone ${p} ${pro.dest}`);
+                        execSync(`git clone ${p} ${pro.dest} && cd ${pro.dest} && npm install`);
                         addLocalPie(path.isAbsolute(pro.dest) ? pro.dest : path.join(process.cwd(), pro.dest), db);
                     } catch (err) {
                         logger.error('调用git clone远程仓库出错:', err.message);

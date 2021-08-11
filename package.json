@@ -5,7 +5,8 @@
   "main": "lib/miraipie.js",
   "types": "types/miraipie.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "demo": "node demo/start-miraipie.js"
   },
   "bin": {
     "miraipie": "bin/miraipie"
@@ -35,9 +36,9 @@
   "files": [
     "assets",
     "bin",
-    "docs",
     "lib",
     "src",
-    "types"
+    "types",
+    "packages"
   ]
 }
