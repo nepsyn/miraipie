@@ -92,7 +92,13 @@ export class FriendChatWindow extends ChatWindow {
     protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
         const resp = await MiraiPieApp.instance.adapter.sendFriendMessage(this.contact.id, messageChain, quoteMessageId);
         const messageId = resp?.messageId;
-        if (messageId) MiraiPieApp.instance.db?.saveMessage(messageId, messageChain, MiraiPieApp.instance.qq, this.contact.id, 'FriendMessage');
+        if (messageId) MiraiPieApp.instance.db?.saveMessage({
+            sourceId: messageId,
+            messageChain,
+            from: MiraiPieApp.instance.qq,
+            to: this.contact.id,
+            type: 'FriendMessage'
+        });
         return messageId;
     }
 
@@ -140,7 +146,13 @@ export class GroupChatWindow extends ChatWindow {
     protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
         const resp = await MiraiPieApp.instance.adapter.sendGroupMessage(this.contact.id, messageChain, quoteMessageId);
         const messageId = resp?.messageId;
-        if (messageId) MiraiPieApp.instance.db?.saveMessage(messageId, messageChain, MiraiPieApp.instance.qq, this.contact.id, 'GroupMessage');
+        if (messageId) MiraiPieApp.instance.db?.saveMessage({
+            sourceId: messageId,
+            messageChain,
+            from: MiraiPieApp.instance.qq,
+            to: this.contact.id,
+            type: 'GroupMessage'
+        });
         return messageId;
     }
 
@@ -316,7 +328,13 @@ export class TempChatWindow extends ChatWindow {
     protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
         const resp = await MiraiPieApp.instance.adapter.sendTempMessage(this.contact.id, this.contact.group.id, messageChain, quoteMessageId);
         const messageId = resp?.messageId;
-        if (messageId) MiraiPieApp.instance.db?.saveMessage(messageId, messageChain, MiraiPieApp.instance.qq, this.contact.id, 'TempMessage');
+        if (messageId) MiraiPieApp.instance.db?.saveMessage({
+            sourceId: messageId,
+            messageChain,
+            from: MiraiPieApp.instance.qq,
+            to: this.contact.id,
+            type: 'TempMessage'
+        });
         return messageId;
     }
 

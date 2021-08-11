@@ -14,7 +14,7 @@ import {
     Profile,
     ResponseCode
 } from '../mirai';
-import {makeAsync, makeReadonly} from '../tool';
+import {dependencyResolve, makeAsync, makeReadonly} from '../tool';
 
 const logger = log4js.getLogger('miraipie');
 
@@ -101,6 +101,8 @@ export class MiraiPieApp {
     private constructor(options: MiraiPieAppOptions & {
         db?: DatabaseAdapter
     }) {
+        MiraiPieApp.instance = this;
+
         // 基础设置
         this.qq = options.qq;
         this.adapter = getMiraiApiHttpAdapter(options.adapter, options.adapterSetting);
@@ -118,34 +120,48 @@ export class MiraiPieApp {
         // 添加pie管理器的消息和事件分发器
         this.onMessage((chatMessage) => this.pieAgent.messageDispatcher(chatMessage));
         this.onMessage((chatMessage) => {
-            this.db?.saveMessage(
-                chatMessage.messageChain.sourceId,
-                chatMessage.messageChain,
-                chatMessage.sender.id,
-                this.qq,
-                chatMessage.type
-            );
+            this.db?.saveMessage({
+                sourceId: chatMessage.messageChain.sourceId,
+                messageChain: chatMessage.messageChain,
+                from: chatMessage.sender.id,
+                to: this.qq,
+                type: chatMessage.type
+            });
         });
         this.onEvent((event) => this.pieAgent.eventDispatcher(event));
         this.onEvent((event) => this.db?.saveEvent(event));
 
         this.db?.saveAppOptions(options);
-        MiraiPieApp.instance = this;
+        this.pieAgent = new PieAgent();
 
         // 加载数据库中记录的pie
-        this.pieAgent = new PieAgent();
         const pieRecords = this.db?.getPieRecords();
+        const pies: Map<string, Pie> = new Map();
+        const edges: Map<string, string[]> = new Map();
         for (const record of pieRecords || []) {
             if (record.path) {
                 try {
-                    this.pieAgent.install(require(record.path), {path: record.path, enabled: record.enabled});
+                    const pie: Pie = require(record.path);
+                    pies.set(pie.fullId, pie);
+                    edges.set(pie.fullId, pie.dependencies.concat());
                 } catch (err) {
                     logger.error(`加载pie模块路径 ${record.path} 出错:`, err.message);
                 }
             }
         }
         // 加载选项中的pie
-        for (const pie of options.pies || []) this.pieAgent.install(pie);
+        for (const pie of options.pies || []) {
+            pies.set(pie.fullId, pie);
+            edges.set(pie.fullId, pie.dependencies.concat());
+        }
+        // 解析依赖顺序
+        const sequence = dependencyResolve(edges);
+        // 按顺序安装pie
+        for (const fullId of sequence) {
+            const record = pieRecords.find((pie) => pie.fullId === fullId);
+            if (record) this.pieAgent.install(pies.get(fullId), {path: record.path, enabled: record.enabled});
+            else this.pieAgent.install(pies.get(fullId));
+        }
 
         // 捕捉Ctrl-C
         process.on('SIGINT', function () {

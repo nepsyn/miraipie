@@ -49,7 +49,7 @@ function addLocalPie(p: string, db: DatabaseAdapter) {
     try {
         const pie: Pie = require(p);
         // 数据库检索是否已经存在
-        const record = db.getPieRecord(pie.fullId);
+        const record = db.getPieRecordByFullId(pie.fullId);
         if (record) {
             // 若数据库中版本较旧则更新数据库中模块地址
             if (pie.version > record.version) {
@@ -308,7 +308,7 @@ program
     .description('启用已添加的pie')
     .action((fullId: string) => {
         useDatabase(program.opts().dbFile).then((db) => {
-            const record = db.getPieRecord(fullId);
+            const record = db.getPieRecordByFullId(fullId);
             if (record) {
                 db.saveOrUpdatePieRecord({...record, enabled: true});
                 logger.info(`已启用 '${fullId}'`);
@@ -324,7 +324,7 @@ program
     .description('禁用已添加的pie')
     .action((fullId: string) => {
         useDatabase(program.opts().dbFile).then((db) => {
-            const record = db.getPieRecord(fullId);
+            const record = db.getPieRecordByFullId(fullId);
             if (record) {
                 db.saveOrUpdatePieRecord({...record, enabled: false});
                 logger.info(`已禁用 '${fullId}'`);
@@ -342,7 +342,7 @@ program
     .description('删除已添加的pie')
     .action((fullId: string, opts) => {
         useDatabase(program.opts().dbFile).then((db) => {
-            const record = db.getPieRecord(fullId);
+            const record = db.getPieRecordByFullId(fullId);
             if (record) {
                 if (opts.hard && fs.existsSync(record.path)) {
                     fs.rmSync(record.path, {recursive: true, force: true});

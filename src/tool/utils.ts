@@ -50,3 +50,30 @@ export async function sleep(ms: number = 100): Promise<void> {
 export function getAssetPath(name: string): string {
     return path.normalize(path.join(__dirname, `../../assets/${name}`));
 }
+
+/**
+ * 解析依赖关系并排序
+ * @param edges 依赖关系抽象的有向图边
+ */
+export function dependencyResolve(edges: Map<string, string[]>) {
+    // 最终结果
+    const sequence: any[] = [];
+    // 当不存在边时结束
+    while (edges.size > 0) {
+        let prior = null;
+        // 寻找引用计数最小的结点
+        for (const [v, e] of edges.entries()) {
+            if (prior === null) prior = v;
+            if (e.length === 0) {
+                prior = v;
+                break;
+            } else if (e.length < edges.get(prior).length) prior = v;
+        }
+        // 删除该结点并加入排序序列
+        sequence.push(prior);
+        edges.delete(prior);
+        // 删除其他结点对该节点的引用关系
+        for (const [v, e] of edges.entries()) edges.set(v, e.filter((p) => p !== prior));
+    }
+    return sequence;
+}

@@ -2,7 +2,7 @@ import db from 'better-sqlite3';
 import fs from 'fs';
 import log4js from 'log4js';
 import {MiraiPieAppOptions} from '.';
-import {ChatMessageType, Event, MessageChain, SingleMessage} from '../mirai';
+import {ChatMessageType, Event, MessageChain} from '../mirai';
 import {getAssetPath} from '../tool';
 
 const logger = log4js.getLogger('db');
@@ -31,6 +31,32 @@ interface PieRecord {
      * pie用户配置
      */
     configs: object;
+}
+
+/**
+ * 数据库中消息记录
+ */
+interface MessageRecord {
+    /**
+     * 消息id
+     */
+    sourceId: number;
+    /**
+     * 消息链
+     */
+    messageChain: MessageChain;
+    /**
+     * 消息发送人QQ号
+     */
+    from: number;
+    /**
+     * 消息接收者账号
+     */
+    to: number;
+    /**
+     * 消息类型
+     */
+    type: ChatMessageType;
 }
 
 /**
@@ -69,13 +95,15 @@ export abstract class DatabaseAdapter {
 
     /**
      * 保存一条消息
-     * @param sourceId 消息id
-     * @param messageChain 消息链
-     * @param from 消息发送人QQ号
-     * @param to 消息接收账号
-     * @param type 消息类型
+     * @param record 消息记录
      */
-    abstract saveMessage(sourceId: number, messageChain: MessageChain | SingleMessage[], from: number, to: number, type: ChatMessageType): boolean;
+    abstract saveMessage(record: MessageRecord): boolean;
+
+    /**
+     * 根据消息id获取一条消息原始记录
+     * @param messageId
+     */
+    abstract getMessageById(messageId: number);
 
     /**
      * 保存一个事件
@@ -98,7 +126,7 @@ export abstract class DatabaseAdapter {
      * 获取指定全限定名pie
      * @param fullId pie全限定名
      */
-    abstract getPieRecord(fullId: string): PieRecord;
+    abstract getPieRecordByFullId(fullId: string): PieRecord;
 
     /**
      * 删除指定全限定名pie记录
@@ -179,17 +207,27 @@ export class Sqlite3Adapter extends DatabaseAdapter {
         }
     }
 
-    saveMessage(sourceId: number, messageChain: MessageChain | SingleMessage[], from: number, to: number, type: ChatMessageType): boolean {
+    saveMessage(record: MessageRecord): boolean {
         const resp = this.database
             ?.prepare('INSERT INTO message (id, content, from_id, to_id, type) VALUES ($sourceId, $content, $from_id, $to_id, $type)')
             .run({
-                sourceId,
-                content: JSON.stringify(MessageChain.from(messageChain).dropped('Source')),
-                from_id: from,
-                to_id: to,
-                type
+                sourceId: record.sourceId,
+                content: JSON.stringify(MessageChain.from(record.messageChain).dropped('Source')),
+                from_id: record.from,
+                to_id: record.to,
+                type: record.type
             });
         return resp?.changes > 0;
+    }
+
+    getMessageById(messageId: number) {
+        const record = this.database
+            .prepare('SELECT id sourceId, content messageChain, from_id [from], to_id [to], type FROM message WHERE id=?')
+            .get(messageId);
+        if (record) {
+            record.messageChain = MessageChain.from(JSON.parse(record.messageChain));
+        }
+        return record;
     }
 
     saveEvent(event: Event): boolean {
@@ -234,7 +272,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
 
     getPieRecords(): PieRecord[] {
         const records = this.database
-            ?.prepare('SELECT full_id AS fullId, version, enabled, path, configs FROM pie')
+            ?.prepare('SELECT full_id fullId, version, enabled, path, configs FROM pie')
             .all();
         for (const record of records || []) {
             record.enabled = (record.enabled === 1);
@@ -243,9 +281,9 @@ export class Sqlite3Adapter extends DatabaseAdapter {
         return records;
     }
 
-    getPieRecord(fullId: string): PieRecord {
+    getPieRecordByFullId(fullId: string): PieRecord {
         const record = this.database
-            ?.prepare('SELECT full_id AS fullId, version, enabled, path, configs FROM pie WHERE full_id=?')
+            ?.prepare('SELECT full_id fullId, version, enabled, path, configs FROM pie WHERE full_id=?')
             .get(fullId);
         if (record) {
             record.enabled = (record.enabled === 1);

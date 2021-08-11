@@ -366,25 +366,19 @@ export class Pie {
     }
 
     /**
-     * 获取相同命名空间下pie的导出对象
-     * @example
-     * // {foo: {foo: 'bar'}, bar: {foo: 'baz'}}
-     * this.getNamespaceExports();
-     */
-    private getNamespaceExports(): object {
-        return MiraiPieApp.instance?.pieAgent.getNamespaceExports(this.namespace);
-    }
-
-    /**
      * 获取依赖项pie的导出对象
      * @param fullId 依赖项的全限定名
      * @example
      * // {foo: 'bar'}
      * this.require('miraipie:foo');
      */
-    private require(fullId: string): object {
+    private async require(fullId: string): Promise<object> {
         if (!this.dependencies.includes(fullId)) logger.warn(`所请求的依赖项 '${fullId}' 没有在pie的声明中指定`);
-        return MiraiPieApp.instance?.pieAgent.getPie(fullId)?.exports;
+        return new Promise((resolve, reject) => {
+            const pie = MiraiPieApp.instance?.pieAgent.getPie(fullId);
+            if (pie) resolve(pie.exports);
+            else reject(new Error(`无法引用未安装的pie '${fullId}'`));
+        });
     }
 }
 
@@ -557,19 +551,6 @@ export class PieAgent {
     }
 
     /**
-     * 获取指定命名空间下所有pie的exports
-     * @param namespace 指定命名空间
-     */
-    getNamespaceExports(namespace: string): { [id: string]: object } {
-        const exports = {};
-        for (const control of this.controller.values()) {
-            const pie = control.pie;
-            if (pie.namespace === namespace) exports[pie.id] = makeReadonly(pie.exports);
-        }
-        return exports;
-    }
-
-    /**
      * 获取pie实例
      * @param fullId pie的全限定名
      */
@@ -600,7 +581,7 @@ export class PieAgent {
             // 防止重复安装
             if (this.getPie(pie.fullId)?.version === pie.version) return;
             // 获取数据库中记录并还原pie环境
-            const record = MiraiPieApp.instance.db?.getPieRecord(pie.fullId);
+            const record = MiraiPieApp.instance.db?.getPieRecordByFullId(pie.fullId);
             if (record) {
                 pie.configs = record.configs as SerializableObject;
                 // pie版本存在更新
