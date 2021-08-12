@@ -28,7 +28,6 @@ log4js.configure({
     }
 });
 
-
 function parseFullId(fullId: string) {
     let namespace: string = null, id: string = null;
     if (fullId) {
@@ -152,7 +151,7 @@ program
                 {
                     type: 'input',
                     name: 'qq',
-                    message: '请输入mirai-api-http服务的QQ号',
+                    message: '请输入mirai-api-http服务的QQ号'
                 },
                 {
                     type: 'input',
@@ -169,7 +168,7 @@ program
                 {
                     type: 'password',
                     name: 'verifyKey',
-                    message: '请输入mirai-api-http配置项中的verifyKey',
+                    message: '请输入mirai-api-http配置项中的verifyKey'
                 }
             ]).then(async (pro: any) => {
                 const app = createMiraiPieApp({
@@ -202,10 +201,10 @@ program
     });
 
 program
-    .command('create [full_id]')
+    .command('create [full_id] [dest]')
     .aliases(['new', 'init', 'c'])
     .description('使用模板创建新的pie项目')
-    .action((fullId: string) => {
+    .action((fullId: string, dest: string) => {
         const [namespace, id] = parseFullId(fullId);
         prompt([
             {
@@ -230,7 +229,7 @@ program
                 type: 'input',
                 name: 'path',
                 message: '请输入存放位置',
-                initial: `pies/${id || 'pie'}/`
+                initial: dest || `pies/${id || 'pie'}/`
             }
         ]).then(async (pro: any) => {
             try {

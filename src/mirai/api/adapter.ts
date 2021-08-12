@@ -147,15 +147,16 @@ export class HttpAdapter implements MiraiApiHttpAdapterApi {
                             if (i.type.endsWith('Message')) this.messageHandler(i as ChatMessage);
                             else this.eventHandler(i as Event);
                         }
+                        await sleep(500);
                     } else {
                         logger.error(`${this.type}监听器启动失败, 错误原因: ${ResponseCode[resp.code]}`);
                     }
-                    first = false;
                 } catch (err) {
-                    logger.log('监听时发生错误:', err.message);
+                    logger.error('监听时发生错误:', err.message);
                     this.isListening = false;
+                } finally {
+                    first = false;
                 }
-                await sleep(500);
             }
         }
     }

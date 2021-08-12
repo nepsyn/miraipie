@@ -108,6 +108,7 @@ export class MiraiPieApp {
         this.adapter = getMiraiApiHttpAdapter(options.adapter, options.adapterSetting);
         this.listenerAdapter = (options.listenerAdapter && getMiraiApiHttpAdapter(options.listenerAdapter, options.adapterSetting)) || this.adapter;
         this.db = options.db || new Sqlite3Adapter('miraipie.db');
+        this.db?.saveAppOptions(options);
 
         // 绑定监听事件
         this.listenerAdapter.messageHandler = (chatMessage) => this.messageDispatcher(chatMessage);
@@ -119,19 +120,19 @@ export class MiraiPieApp {
 
         // 添加pie管理器的消息和事件分发器
         this.onMessage((chatMessage) => this.pieAgent.messageDispatcher(chatMessage));
-        this.onMessage((chatMessage) => {
-            this.db?.saveMessage({
-                sourceId: chatMessage.messageChain.sourceId,
-                messageChain: chatMessage.messageChain,
-                from: chatMessage.sender.id,
-                to: this.qq,
-                type: chatMessage.type
-            });
-        });
+        this.onMessage((chatMessage) => this.db?.saveMessage({
+            sourceId: chatMessage.messageChain.sourceId,
+            messageChain: chatMessage.messageChain,
+            from: chatMessage.sender.id,
+            to: this.qq,
+            type: chatMessage.type
+        }));
         this.onEvent((event) => this.pieAgent.eventDispatcher(event));
-        this.onEvent((event) => this.db?.saveEvent(event));
+        this.onEvent((event) => this.db?.saveEvent({
+            event,
+            type: event.type
+        }));
 
-        this.db?.saveAppOptions(options);
         this.pieAgent = new PieAgent();
 
         // 加载数据库中记录的pie

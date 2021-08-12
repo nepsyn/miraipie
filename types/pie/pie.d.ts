@@ -15,8 +15,14 @@ declare type SerializableObject = {
  * 配置类型
  */
 declare type ConfigConstructor<T = SerializableType> = {
-    (...args: any[]): T;
+    (arg: any): T;
 };
+/**
+ * 配置方法类型
+ */
+interface MethodsOption {
+    [key: string]: (this: Pie, ...args: any) => any;
+}
 /**
  * 用户配置元声明
  */
@@ -98,9 +104,7 @@ export interface PieOptions {
      * // "Hello Nepsyn"
      * pie.greet();
      */
-    methods?: {
-        [name: string]: (this: Pie, ...args: any[]) => any;
-    };
+    methods?: MethodsOption;
     /**
      * pie用户配置元声明, 用以标识用户配置项
      * @example
@@ -177,6 +181,7 @@ export interface PieOptions {
  * A Delicious Pie
  */
 export declare class Pie {
+    [key: string]: unknown;
     /**
      * 命名空间(必须为合法标识符)
      */
@@ -220,17 +225,11 @@ export declare class Pie {
     /**
      * pie中数据
      */
-    data?: object;
+    data?: Record<string, any>;
     /**
      * pie中导出对象
      */
-    exports?: object;
-    /**
-     * pie中方法
-     */
-    methods?: {
-        [name: string]: (this: Pie, ...args: any[]) => any;
-    };
+    exports?: Record<string, any>;
     /**
      * pie用户配置元声明
      */

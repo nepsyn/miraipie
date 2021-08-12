@@ -77,3 +77,16 @@ export function dependencyResolve(edges: Map<string, string[]>) {
     }
     return sequence;
 }
+
+/**
+ * 转化日期对象为字符串
+ */
+export function formatDate(date: Date): string {
+    if (!date) return null;
+    return `${date.getUTCFullYear()}-` +
+        `${(date.getMonth() + 1).toString().padStart(2, '0')}-` +
+        `${date.getDate().toString().padStart(2, '0')} ` +
+        `${date.getHours().toString().padStart(2, '0')}:` +
+        `${date.getMinutes().toString().padEnd(2, '0')}:` +
+        `${date.getSeconds().toString().padStart(2, '0')}`;
+}

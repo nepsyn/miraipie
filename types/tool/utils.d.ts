@@ -27,3 +27,7 @@ export declare function getAssetPath(name: string): string;
  * @param edges 依赖关系抽象的有向图边
  */
 export declare function dependencyResolve(edges: Map<string, string[]>): any[];
+/**
+ * 转化日期对象为字符串
+ */
+export declare function formatDate(date: Date): string;

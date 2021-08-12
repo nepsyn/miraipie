@@ -1,5 +1,5 @@
 import { MiraiPieAppOptions } from '.';
-import { ChatMessageType, Event, MessageChain } from '../mirai';
+import { ChatMessageType, Event, EventType, MessageChain } from '../mirai';
 /**
  * 数据库中pie记录
  */
@@ -49,6 +49,27 @@ interface MessageRecord {
      * 消息类型
      */
     type: ChatMessageType;
+    /**
+     * 时间
+     */
+    time?: Date;
+}
+/**
+ * 数据库中事件记录
+ */
+interface EventRecord {
+    /**
+     * 事件内容
+     */
+    event: Event;
+    /**
+     * 事件类型
+     */
+    type: EventType;
+    /**
+     * 时间
+     */
+    time?: Date;
 }
 /**
  * 数据库adapter
@@ -62,6 +83,10 @@ export declare abstract class DatabaseAdapter {
      * 是否已打卡
      */
     abstract open: boolean;
+    /**
+     * 数据库文件路径
+     */
+    abstract path: string;
     /**
      * 创建新的数据库
      */
@@ -88,12 +113,32 @@ export declare abstract class DatabaseAdapter {
      * 根据消息id获取一条消息原始记录
      * @param messageId
      */
-    abstract getMessageById(messageId: number): any;
+    abstract getMessageById(messageId: number): MessageRecord;
+    /**
+     * 通过指定条件查询消息记录
+     * @param conditions 查询条件
+     */
+    abstract queryMessages(conditions?: {
+        from?: number;
+        to?: number;
+        type?: ChatMessageType;
+        timeStart?: Date;
+        timeEnd?: Date;
+    }): MessageRecord[];
     /**
      * 保存一个事件
-     * @param event 事件
+     * @param record 事件
      */
-    abstract saveEvent(event: Event): boolean;
+    abstract saveEvent(record: EventRecord): boolean;
+    /**
+     * 通过指定条件查询事件记录
+     * @param conditions 查询条件
+     */
+    abstract queryEvents(conditions?: {
+        type?: EventType;
+        timeStart?: Date;
+        timeEnd?: Date;
+    }): EventRecord[];
     /**
      * 保存或更新pie记录
      * @param record pie记录
@@ -136,7 +181,19 @@ export declare class Sqlite3Adapter extends DatabaseAdapter {
     loadAppOptions(): MiraiPieAppOptions;
     saveMessage(record: MessageRecord): boolean;
     getMessageById(messageId: number): any;
-    saveEvent(event: Event): boolean;
+    queryMessages(conditions?: {
+        from?: number;
+        to?: number;
+        type?: ChatMessageType;
+        timeStart?: Date;
+        timeEnd?: Date;
+    }): MessageRecord[];
+    saveEvent(record: EventRecord): boolean;
+    queryEvents(conditions?: {
+        type?: EventType;
+        timeStart?: Date;
+        timeEnd?: Date;
+    }): EventRecord[];
     saveOrUpdatePieRecord(record: PieRecord): boolean;
     getPieRecords(): PieRecord[];
     getPieRecordByFullId(fullId: string): PieRecord;
