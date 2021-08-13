@@ -1,5 +1,5 @@
 import log4js from 'log4js';
-import {DatabaseAdapter, Pie, PieAgent, Sqlite3Adapter} from '.';
+import {DatabaseAdapter, PieInstance, PieAgent, Sqlite3Adapter} from '.';
 import {
     ChatMessage,
     Event,
@@ -43,7 +43,7 @@ export interface MiraiPieAppOptions {
     /**
      * 额外加载的pie列表
      */
-    pies?: Pie[];
+    pies?: PieInstance[];
 }
 
 /**
@@ -137,12 +137,12 @@ export class MiraiPieApp {
 
         // 加载数据库中记录的pie
         const pieRecords = this.db?.getPieRecords();
-        const pies: Map<string, Pie> = new Map();
+        const pies: Map<string, PieInstance> = new Map();
         const edges: Map<string, string[]> = new Map();
         for (const record of pieRecords || []) {
             if (record.path) {
                 try {
-                    const pie: Pie = require(record.path);
+                    const pie: PieInstance = require(record.path);
                     pies.set(pie.fullId, pie);
                     edges.set(pie.fullId, pie.dependencies.concat());
                 } catch (err) {

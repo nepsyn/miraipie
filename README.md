@@ -6,9 +6,9 @@
 
 ### 准备工作
 
-- 安装 [mirai-console](https://github.com/mamoe/mirai-console) 并启用 [mirai-api-http](https://github.com/project-mirai/mirai-api-http) 插件。 推荐使用 [mirai-console-loader](https://github.com/iTXTech/mirai-console-loader) 一键启动 mirai-console 并加载插件。
-- 填写 mirai-api-http 插件配置文件，并保证至少启用了 [http adapter](https://github.com/project-mirai/mirai-api-http#adapter) 。
-- 在 mirai-console 中登录自己的机器人账号。
+-  安装 [mirai-console](https://github.com/mamoe/mirai-console) 并启用 [mirai-api-http](https://github.com/project-mirai/mirai-api-http) 插件。 推荐使用 [mirai-console-loader](https://github.com/iTXTech/mirai-console-loader) 一键启动 mirai-console 并加载插件。
+-  填写 mirai-api-http 插件配置文件，并保证至少启用了 [http adapter](https://github.com/project-mirai/mirai-api-http#adapter) 。
+-  在 mirai-console 中登录自己的机器人账号。
 
 ### 安装 `miraipie`
 
@@ -21,8 +21,15 @@
 通过 git 安装：
 
 ```shell
+# 克隆本项目
 > git clone https://github.com/nepsyn/miraipie.git
+# 进入目标文件夹
 > cd miraipie
+# 安装项目依赖
+> npm install
+# 编译本项目
+> npm run build
+# 安装到全局
 > npm install . -g
 ```
 

@@ -215,7 +215,7 @@ export class Sqlite3Adapter extends DatabaseAdapter {
     }
 
     static create(path: string): Sqlite3Adapter {
-        fs.copyFileSync(getAssetPath('miraipie.db.template'), path);
+        fs.copyFileSync(getAssetPath('miraipie.db'), path);
         return new Sqlite3Adapter(path);
     }
 

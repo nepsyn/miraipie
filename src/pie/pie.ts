@@ -6,46 +6,52 @@ import {makeAsync, makeReadonly} from '../tool';
 const logger = log4js.getLogger('pie');
 
 /**
- * 可序列化类型
+ * 用户配置类型的构造器
  */
-type SerializableType = string | number | boolean | Array<SerializableType> | SerializableObject;
-/**
- * 可序列化对象类型
- */
-type SerializableObject = { [key: string]: SerializableType };
-/**
- * 配置类型
- */
-type ConfigConstructor<T = SerializableType> = { (arg): T; }
+type ConfigConstructor<T = any> = {
+    (...args: any[]): T;
+};
 
 /**
- * 配置方法类型
+ * 用户配置元声明属性
  */
-interface MethodsOption {
-    [key: string]: (this: Pie, ...args: any) => any;
+interface ConfigMeta<T = any, D = T> {
+    /**
+     * 配置类型
+     */
+    type: ConfigConstructor<T>;
+    /**
+     * 配置描述
+     */
+    description?: string;
+    /**
+     * 配置默认值
+     */
+    default?: D;
 }
 
 /**
  * 用户配置元声明
  */
-interface UserConfigMeta<T = SerializableType> {
-    [key: string]: {
-        /**
-         * 配置类型
-         */
-        type: ConfigConstructor<T>;
-        /**
-         * 配置描述
-         */
-        description?: string;
-        /**
-         * 配置默认值
-         */
-        default?: T;
-    };
+interface UserConfigMeta<T = any> {
+    [key: string]: ConfigMeta<T>;
 }
 
-export interface PieOptions {
+/**
+ * 用户配置
+ */
+type UserConfig<U extends UserConfigMeta> = {
+    [P in keyof U]: ReturnType<U[P]['type']>;
+}
+
+/**
+ * 配置方法类型
+ */
+interface MethodsOption {
+    [key: string]: (...args: any) => any;
+}
+
+export interface PieOptions<D extends {} = {}, E extends {} = {}, M extends MethodsOption = {}, U extends UserConfigMeta = {}> {
     /**
      * 命名空间(必须为合法标识符)
      */
@@ -91,12 +97,12 @@ export interface PieOptions {
     /**
      * pie中数据
      */
-    data?: object;
+    data?: D;
     /**
      * pie中导出对象, 其他pie可引入pie中导出的内容<br/>
      * 注意导出对象中方法this指向该对象, 而不是pie实例
      */
-    exports?: object;
+    exports?: E;
     /**
      * pie中方法, 生成pie实例时会自动挂载到实例上, 命名与pie中属性冲突的会在方法名前加$代替
      * @example
@@ -109,7 +115,7 @@ export interface PieOptions {
      * // "Hello Nepsyn"
      * pie.greet();
      */
-    methods?: MethodsOption;
+    methods?: M;
     /**
      * pie用户配置元声明, 用以标识用户配置项
      * @example
@@ -125,7 +131,7 @@ export interface PieOptions {
      *     }
      * }
      */
-    userConfigMeta?: UserConfigMeta;
+    userConfigMeta?: U;
     /**
      * pie消息过滤器, 用以在执行pie处理器前过滤掉不需要的消息, 多个过滤器求<strong>与</strong>, 为true则执行messageHandler
      * @example
@@ -151,33 +157,33 @@ export interface PieOptions {
      *     window.send(chain);
      * }
      */
-    messageHandler?(this: Pie, window: ChatWindow, chain: MessageChain): any;
+    messageHandler?(this: PieInstance<D, E, M, U>, window: ChatWindow, chain: MessageChain): any;
 
     /**
      * pie事件监听器, 用以监听事件并处理
      * @param event 事件
      */
-    eventHandler?(this: Pie, event: Event): any;
+    eventHandler?(this: PieInstance<D, E, M, U>, event: Event): any;
 
     /**
      * pie安装完成hook
      */
-    installed?(this: Pie): void;
+    installed?(this: PieInstance<D, E, M, U>): void;
 
     /**
      * pie卸载完成hook
      */
-    uninstalled?(this: Pie): void;
+    uninstalled?(this: PieInstance<D, E, M, U>): void;
 
     /**
      * pie启用hook
      */
-    enabled?(this: Pie): void;
+    enabled?(this: PieInstance<D, E, M, U>): void;
 
     /**
      * pie禁用hook
      */
-    disabled?(this: Pie): void;
+    disabled?(this: PieInstance<D, E, M, U>): void;
 
     /**
      * pie版本更新hook
@@ -187,172 +193,24 @@ export interface PieOptions {
      *     console.log(`you have upgraded ${this.fullId} from version ${oldVersion} to ${this.version}`);
      * }
      */
-    updated?(this: Pie, oldVersion: string): void;
+    updated?(this: PieInstance<D, E, M, U>, oldVersion: string): void;
 }
 
-/**
- * A Delicious Pie
- */
-export class Pie {
-    [key: string]: unknown;
-    /**
-     * 命名空间(必须为合法标识符)
-     */
-    namespace: string;
-    /**
-     * id(必须为合法标识符)
-     */
-    id: string;
-    /**
-     * 名称
-     */
-    name: string;
-    /**
-     * 作者
-     */
-    author: string;
-    /**
-     * 版本号
-     */
-    version: string;
-
-    /**
-     * 描述
-     */
-    description?: string;
-    /**
-     * 作者链接
-     */
-    authorUrl?: string;
-    /**
-     * 项目链接
-     */
-    projectUrl?: string;
-    /**
-     * 项目依赖
-     */
-    dependencies?: string[];
-    /**
-     * 项目关键字
-     */
-    keywords?: string[];
-
-    /**
-     * pie中数据
-     */
-    data?: Record<string, any>;
-    /**
-     * pie中导出对象
-     */
-    exports?: Record<string, any>;
-    /**
-     * pie用户配置元声明
-     */
-    userConfigMeta?: UserConfigMeta;
-    /**
-     * pie用户配置
-     */
-    configs: SerializableObject;
-    /**
-     * pie消息过滤器
-     */
-    filters?: PieFilter[];
-
+export type PieInstance<D extends {} = {}, E extends {} = {}, M extends MethodsOption = {}, U extends UserConfigMeta = {}> = {
     /**
      * pie logger
      */
     logger: Logger;
-    /**
-     * 是否为pie标识
-     */
-    readonly isPie = true;
 
     /**
-     * pie消息监听器
-     * @param window 当前聊天窗
-     * @param chain 消息链
+     * 是否为 pie 标志, 恒为 true
      */
-    messageHandler?(this: Pie, window: ChatWindow, chain: MessageChain): any;
+    isPie: true;
 
     /**
-     * pie事件监听器
-     * @param event 事件
+     * pie 的用户配置
      */
-    eventHandler?(this: Pie, event: Event): any;
-
-    /**
-     * pie安装完成hook
-     */
-    installed?(this: Pie): void;
-
-    /**
-     * pie卸载完成hook
-     */
-    uninstalled?(this: Pie): void;
-
-    /**
-     * pie启用hook
-     */
-    enabled?(this: Pie): void;
-
-    /**
-     * pie禁用hook
-     */
-    disabled?(this: Pie): void;
-
-    /**
-     * pie版本更新hook
-     * @param oldVersion
-     */
-    updated?(this: Pie, oldVersion: string): void;
-
-    /**
-     * @param options pie选项
-     */
-    constructor(options: PieOptions) {
-        // 判断标识符是否合法
-        if (!(options.namespace.match(/^[\w]+$/) && options.id.match(/^[\w]+$/))) {
-            throw new Error('pie的namespace和id字段都必须为合法标识符')
-        }
-
-        // 基础配置
-        this.namespace = options.namespace;
-        this.id = options.id;
-        this.author = options.author;
-        this.version = options.version;
-
-        // pie相关信息
-        this.description = options.description || '';
-        this.authorUrl = options.authorUrl || '';
-        this.projectUrl = options.projectUrl || '';
-        this.dependencies = options.dependencies || [];
-        this.keywords = options.keywords || [];
-
-        // logger
-        this.logger = log4js.getLogger(this.fullId);
-
-        // pie运行环境
-        this.data = options.data || {};
-        this.exports = options.exports || {};
-        this.userConfigMeta = options.userConfigMeta || {};
-        this.configs = {};
-        for (const i of Object.keys(this.userConfigMeta)) this.configs[i] = options.userConfigMeta[i].default;
-        this.filters = options.filters || [];
-
-        // pie生命周期钩子
-        this.installed = options.installed;
-        this.uninstalled = options.uninstalled;
-        this.enabled = options.enabled;
-        this.disabled = options.disabled;
-        this.updated = options.updated;
-
-        // pie处理器
-        this.messageHandler = options.messageHandler;
-        this.eventHandler = options.eventHandler;
-
-        // 挂载options中方法到pie实例
-        for (const key in options.methods || {}) this[key in this ? `$${key}` : key] = options.methods[key];
-    }
+    configs: UserConfig<U>;
 
     /**
      * 返回pie的全限定名, 格式为: $namespace:$id
@@ -360,9 +218,7 @@ export class Pie {
      * "miraipie:foo"
      * "miraipie:bar"
      */
-    get fullId(): string {
-        return `${this.namespace}:${this.id}`;
-    }
+    fullId: string;
 
     /**
      * 获取依赖项pie的导出对象
@@ -371,13 +227,54 @@ export class Pie {
      * // {foo: 'bar'}
      * this.require('miraipie:foo');
      */
-    private async require(fullId: string): Promise<object> {
-        if (!this.dependencies.includes(fullId)) logger.warn(`所请求的依赖项 '${fullId}' 没有在pie的声明中指定`);
-        return new Promise((resolve, reject) => {
-            const pie = MiraiPieApp.instance?.pieAgent.getPie(fullId);
-            if (pie) resolve(pie.exports);
-            else reject(new Error(`无法引用未安装的pie '${fullId}'`));
-        });
+    require(fullId: string): Promise<object>;
+} & Readonly<M> & PieOptions<D, E, M, U>;
+
+/**
+ * A delicious pie
+ * @param options pie 配置项
+ */
+export function Pie<D, E, M extends MethodsOption, U extends UserConfigMeta>(options: PieOptions<D, E, M, U>): PieInstance<D, E, M, U> {
+    // 判断标识符是否合法
+    if (!(options.namespace.match(/^[\w]+$/) && options.id.match(/^[\w]+$/))) {
+        throw new Error('pie的namespace和id字段都必须为合法标识符')
+    }
+
+    const configs = {};
+    for (const key in options.userConfigMeta || {}) configs[key] = options.userConfigMeta[key].default;
+
+    const pie: PieInstance<D, E, M, U> = {
+        ...options,
+        ...options.methods,
+        description: options.description || '',
+        authorUrl: options.authorUrl || '',
+        projectUrl: options.projectUrl || '',
+        dependencies: options.dependencies || [],
+        keywords: options.keywords || [],
+        data: options.data || {},
+        exports: options.exports || {},
+        userConfigMeta: options.userConfigMeta || {},
+        configs: configs as UserConfig<U>,
+        filters: options.filters || [],
+        logger: log4js.getLogger(this.fullId),
+        isPie: true,
+        get fullId() {
+            return `${this.namespace}:${this.id}`;
+        },
+        async require(fullId: string): Promise<object> {
+            if (!this.dependencies.includes(fullId)) logger.warn(`所请求的依赖项 '${fullId}' 没有在pie的声明中指定`);
+            return new Promise((resolve, reject) => {
+                const pie = MiraiPieApp.instance?.pieAgent.getPie(fullId);
+                if (pie) resolve(pie.exports);
+                else reject(new Error(`无法引用未安装的pie '${fullId}'`));
+            });
+        }
+    }
+
+    if (this instanceof Pie) {
+        Object.assign(this, pie);
+    } else {
+        return pie;
     }
 }
 
@@ -394,7 +291,7 @@ export class PieFilter {
      * 过滤器签名, 通常要能表达过滤器的意图
      */
     sign: string;
-    handler: (window: ChatWindow, chain: MessageChain, pie: Pie) => boolean;
+    handler: (window: ChatWindow, chain: MessageChain, pie: PieInstance) => boolean;
 
     /**
      * 消息包含@我
@@ -525,7 +422,7 @@ interface PieControl {
     /**
      * pie实例
      */
-    pie: Pie;
+    pie: PieInstance;
     /**
      * 是否启用
      */
@@ -553,7 +450,7 @@ export class PieAgent {
      * 获取pie实例
      * @param fullId pie的全限定名
      */
-    getPie(fullId: string): Pie {
+    getPie(fullId: string): PieInstance {
         return makeReadonly(this.controller.get(fullId)?.pie);
     }
 
@@ -575,14 +472,14 @@ export class PieAgent {
      * @param pie pie实例
      * @param options 安装选项
      */
-    install(pie: Pie, options?: { path?: string, enabled?: boolean }) {
+    install(pie: PieInstance, options?: { path?: string, enabled?: boolean }) {
         if (pie?.isPie) {
             // 防止重复安装
             if (this.getPie(pie.fullId)?.version === pie.version) return;
             // 获取数据库中记录并还原pie环境
             const record = MiraiPieApp.instance.db?.getPieRecordByFullId(pie.fullId);
             if (record) {
-                pie.configs = record.configs as SerializableObject;
+                pie.configs = record.configs;
                 // pie版本存在更新
                 if (pie.version > record.version && pie.updated) {
                     makeAsync(pie.updated, pie)(record.version).catch((err) => {

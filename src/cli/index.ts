@@ -5,7 +5,7 @@ import fs from 'fs';
 import log4js from 'log4js';
 import path from 'path';
 import {ChatMessage, Event, Friend, GroupMember, MiraiApiHttpAdapterMap} from '../mirai';
-import {createMiraiPieApp, DatabaseAdapter, Pie, Sqlite3Adapter} from '../pie';
+import {createMiraiPieApp, DatabaseAdapter, PieInstance, Sqlite3Adapter} from '../pie';
 import {getAssetPath} from '../tool';
 
 const logger = log4js.getLogger('console');
@@ -46,7 +46,7 @@ function useDatabase(path: string): Promise<DatabaseAdapter> {
 
 function addLocalPie(p: string, db: DatabaseAdapter) {
     try {
-        const pie: Pie = require(p);
+        const pie: PieInstance = require(p);
         // 数据库检索是否已经存在
         const record = db.getPieRecordByFullId(pie.fullId);
         if (record) {
@@ -248,11 +248,11 @@ program
                     }
                 }
                 // 创建package.json
-                let packageContent = fs.readFileSync(getAssetPath('package.json.template')).toString();
+                let packageContent = fs.readFileSync(getAssetPath('package.json')).toString();
                 packageContent = packageContent.replace('{{name}}', pro.name);
                 fs.writeFileSync(path.join(pro.path, 'package.json'), packageContent);
                 // 创建pie文件
-                let pieContent = fs.readFileSync(getAssetPath('pie.js.template')).toString();
+                let pieContent = fs.readFileSync(getAssetPath('pie.js')).toString();
                 pieContent = pieContent
                     .replace('{{namespace}}', pro.namespace)
                     .replace('{{id}}', pro.id)
