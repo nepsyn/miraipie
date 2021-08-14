@@ -48,6 +48,35 @@ function useDatabase(path: string): Promise<DatabaseAdapter> {
     });
 }
 
+function writeConfig(userConfigMeta): Promise<any> {
+    const configProps = Object.keys(userConfigMeta);
+    const queries = configProps.map((prop) => {
+        const meta = userConfigMeta[prop];
+        const type = typeof meta.type();
+        return {
+            type: type === 'number' ? 'numeral' : type === 'boolean' ? 'confirm' : 'input',
+            name: prop,
+            message: `请输入配置项 - ${prop}` + (meta.description ? `(${meta.description})` : ''),
+            initial: meta.default
+        };
+    });
+    return new Promise((resolve, reject) => {
+        prompt(queries).then((pro) => {
+            for (const prop of configProps) {
+                try {
+                    pro[prop] = userConfigMeta[prop].type(pro[prop]);
+                } catch (err) {
+                    pro[prop] = null;
+                    logger.error(`配置项 '${prop}' 初始化出错:`, err.message);
+                }
+            }
+            resolve(pro);
+        }).catch(() => {
+            reject();
+        });
+    });
+}
+
 function addLocalPie(p: string, db: DatabaseAdapter) {
     try {
         const pie: PieInstance = require(p);
@@ -61,25 +90,7 @@ function addLocalPie(p: string, db: DatabaseAdapter) {
                 logger.info(`指定pie '${pie.fullId}' 已存在于数据库中`);
             }
         } else {
-            const configProps = Object.keys(pie.userConfigMeta);
-            const queries = configProps.map((prop) => {
-                const meta = pie.userConfigMeta[prop];
-                return {
-                    type: 'input',
-                    name: prop,
-                    message: `请输入配置项 - ${prop}` + (meta.description ? `(${meta.description})` : ''),
-                    initial: JSON.stringify(meta.default)
-                }
-            });
-            prompt(queries).then((pro) => {
-                for (const prop of configProps) {
-                    try {
-                        pro[prop] = pie.userConfigMeta[prop].type(JSON.parse(pro[prop] || 'null'));
-                    } catch (err) {
-                        pro[prop] = null;
-                        logger.error(`配置项 '${prop}' 初始化出错:`, err.message);
-                    }
-                }
+            writeConfig(pie.userConfigMeta).then((pro) => {
                 // 数据库中添加记录
                 db.saveOrUpdatePieRecord({
                     fullId: pie.fullId,

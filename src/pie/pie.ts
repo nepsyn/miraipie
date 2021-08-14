@@ -260,13 +260,11 @@ export function Pie<D, E, M extends MethodsOption, U extends UserConfigMeta>(opt
         userConfigMeta: options.userConfigMeta || {},
         configs: configs as UserConfig<U>,
         filters: options.filters || [],
-        logger: log4js.getLogger(this.fullId),
+        fullId: `${options.namespace}:${options.id}`,
+        logger: log4js.getLogger(`${options.namespace}:${options.id}`),
         isPie: true,
-        get fullId() {
-            return `${this.namespace}:${this.id}`;
-        },
         async require(fullId: string): Promise<object> {
-            if (!this.dependencies.includes(fullId)) logger.warn(`所请求的依赖项 '${fullId}' 没有在pie的声明中指定`);
+            if (!this.dependencies.includes(fullId)) this.logger.warn(`所请求的依赖项 '${fullId}' 没有在pie的声明中指定`);
             return new Promise((resolve, reject) => {
                 const pie = MiraiPieApp.instance?.pieAgent.getPie(fullId);
                 if (pie) resolve(pie.exports);
@@ -577,7 +575,7 @@ export class PieAgent {
         // 构造聊天窗
         let window: ChatWindow = null;
         if (chatMessage.type === 'FriendMessage') window = new FriendChatWindow(chatMessage.sender as Friend);
-        else if (chatMessage.type === 'GroupMessage') window = new GroupChatWindow((chatMessage.sender as GroupMember).group, chatMessage.sender as GroupMember);
+        else if (chatMessage.type === 'GroupMessage') window = new GroupChatWindow(chatMessage.sender as GroupMember);
         else if (chatMessage.type === 'TempMessage') window = new TempChatWindow(chatMessage.sender as GroupMember);
 
         // 使聊天窗和消息链只读

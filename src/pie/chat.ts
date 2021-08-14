@@ -27,6 +27,10 @@ export abstract class ChatWindow {
      */
     readonly contact: Contact;
     /**
+     * 当前窗口消息发送人(只有群聊时和 contact 不同)
+     */
+    readonly sender: Contact;
+    /**
      * 聊天窗类型
      */
     readonly type: ChatWindowType;
@@ -84,9 +88,11 @@ export abstract class ChatWindow {
  */
 export class FriendChatWindow extends ChatWindow {
     readonly type = 'FriendChatWindow';
+    readonly sender: Friend;
 
     constructor(public readonly contact: Friend) {
         super();
+        this.sender = contact;
     }
 
     protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
@@ -131,9 +137,11 @@ export class FriendChatWindow extends ChatWindow {
  */
 export class GroupChatWindow extends ChatWindow {
     readonly type = 'GroupChatWindow';
+    readonly contact: Group;
 
-    constructor(public readonly contact: Group, public readonly sender: GroupMember) {
+    constructor(public readonly sender: GroupMember) {
         super();
+        this.contact = sender.group;
     }
 
     /**
@@ -320,9 +328,11 @@ export class GroupChatWindow extends ChatWindow {
  */
 export class TempChatWindow extends ChatWindow {
     readonly type = 'TempChatWindow';
+    readonly sender: GroupMember;
 
     constructor(public readonly contact: GroupMember) {
         super();
+        this.sender = contact;
     }
 
     protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {

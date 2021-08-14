@@ -8,6 +8,6 @@
   "author": "",
   "license": "AGPL-3.0",
   "devDependencies": {
-    "miraipie": "^1.0.0"
+    "miraipie": "^1.0.4"
   }
 }
