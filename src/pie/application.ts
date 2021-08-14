@@ -164,6 +164,11 @@ export class MiraiPieApp {
             else this.pieAgent.install(pies.get(fullId));
         }
 
+        // 捕获未处理的异常
+        process.on('unhandledRejection', (reason) => {
+            logger.debug('捕获到未处理的异常:', reason);
+        });
+
         // 捕捉Ctrl-C
         process.on('SIGINT', function () {
             logger.info('已手动停止运行 (Ctrl-C)');

@@ -1,6 +1,5 @@
 import {MiraiPieApp, Plain} from '.';
 import {
-    Contact,
     FileOverview,
     Friend,
     Group,
@@ -25,11 +24,11 @@ export abstract class ChatWindow {
     /**
      * 当前窗口联系人
      */
-    readonly contact: Contact;
+    readonly contact: Friend | Group | GroupMember;
     /**
      * 当前窗口消息发送人(只有群聊时和 contact 不同)
      */
-    readonly sender: Contact;
+    readonly sender: Friend | GroupMember;
     /**
      * 聊天窗类型
      */

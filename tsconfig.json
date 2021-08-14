@@ -7,6 +7,7 @@
     "esModuleInterop": true,
     "declaration": true,
     "declarationDir": "types",
+    "moduleResolution": "Node",
     "lib": [
       "es2016"
     ]

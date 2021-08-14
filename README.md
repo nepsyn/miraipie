@@ -6,9 +6,11 @@
 
 ### 准备工作
 
--  安装 [mirai-console](https://github.com/mamoe/mirai-console) 并启用 [mirai-api-http](https://github.com/project-mirai/mirai-api-http) 插件。 推荐使用 [mirai-console-loader](https://github.com/iTXTech/mirai-console-loader) 一键启动 mirai-console 并加载插件。
--  填写 mirai-api-http 插件配置文件，并保证至少启用了 [http adapter](https://github.com/project-mirai/mirai-api-http#adapter) 。
--  在 mirai-console 中登录自己的机器人账号。
+- 安装 [mirai-console](https://github.com/mamoe/mirai-console)
+  并启用 [mirai-api-http](https://github.com/project-mirai/mirai-api-http) 插件。
+  推荐使用 [mirai-console-loader](https://github.com/iTXTech/mirai-console-loader) 一键启动 mirai-console 并加载插件。
+- 填写 mirai-api-http 插件配置文件，并保证至少启用了 [http adapter](https://github.com/project-mirai/mirai-api-http#adapter) 。
+- 在 mirai-console 中登录自己的机器人账号。
 
 ### 安装 `miraipie`
 
@@ -81,10 +83,12 @@ TODO
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-## v1.0.4
--  修复 群聊消息类型定义。
--  修复 `pie` 名称问题。
--  优化 cli `pie` 配置项填写。
+## v1.0.5
+
+- 修复 只读属性问题。
+- 优化 部分类型定义。
+- 优化 日志记录方式。
+- 添加 未捕获异常的全局处理。
 
 # 许可
 

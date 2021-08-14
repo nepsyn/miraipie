@@ -9,9 +9,7 @@ export function makeReadonly<T extends object>(target: T): T {
     if (target) {
         return new Proxy(target, {
             get(target: T, p: string | symbol, receiver: any): any {
-                const res = Reflect.get(target, p, receiver);
-                if (typeof res === 'object') return makeReadonly(res);  // 迭代子对象
-                else return res;
+                return Reflect.get(target, p, receiver);
             },
             set(): boolean {
                 return false;  // 不可修改

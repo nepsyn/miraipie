@@ -15,20 +15,12 @@ log4js.configure({
         console: {
             type: 'console'
         },
-        file: {
-            type: 'dateFile',
-            filename: 'log/miraipie.log',
-        }
     },
     categories: {
         default: {
-            appenders: ['console', 'file'],
-            level: 'debug'
-        },
-        cli: {
             appenders: ['console'],
             level: 'info'
-        }
+        },
     }
 });
 
@@ -139,6 +131,24 @@ program
     .option('-p, --pies <paths...>', 'miraipie需要额外加载的pie的模块路径')
     .option('-v, --verbose', '控制台打印miraipie接收到的消息和事件')
     .action(async (opts) => {
+        log4js.configure({
+            appenders: {
+                console: {
+                    type: 'console'
+                },
+                file: {
+                    type: 'dateFile',
+                    filename: 'log/miraipie.log',
+                }
+            },
+            categories: {
+                default: {
+                    appenders: ['console', 'file'],
+                    level: 'debug'
+                }
+            }
+        });
+
         const db = fs.existsSync(program.opts().dbFile) ? new Sqlite3Adapter(program.opts().dbFile) : Sqlite3Adapter.create(program.opts().dbFile);
         if (db.open && fs.statSync(program.opts().dbFile).size / (2 ** 30) > 1) {
             logger.warn('数据库文件大小已超过1GB, 建议使用命令 `miraipie clear-history` 清除历史消息记录');
