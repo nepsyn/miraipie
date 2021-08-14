@@ -1,6 +1,6 @@
 import log4js, {Logger} from 'log4js';
 import {ChatWindow, FriendChatWindow, GroupChatWindow, MiraiPieApp, TempChatWindow} from '.';
-import {At, ChatMessage, Event, Friend, Group, GroupMember, MessageChain, SingleMessageType} from '../mirai';
+import {At, ChatMessage, Event, Friend, GroupMember, MessageChain, SingleMessageType} from '../mirai';
 import {makeAsync, makeReadonly} from '../tool';
 
 const logger = log4js.getLogger('pie');
@@ -48,7 +48,7 @@ type UserConfig<U extends UserConfigMeta> = {
  * 配置方法类型
  */
 interface MethodsOption {
-    [key: string]: (...args: any) => any;
+    [key: string]: (this: PieInstance, ...args: any) => any;
 }
 
 export interface PieOptions<D extends {} = {}, E extends {} = {}, M extends MethodsOption = {}, U extends UserConfigMeta = {}> {
@@ -104,7 +104,7 @@ export interface PieOptions<D extends {} = {}, E extends {} = {}, M extends Meth
      */
     exports?: E;
     /**
-     * pie中方法, 生成pie实例时会自动挂载到实例上, 命名与pie中属性冲突的会在方法名前加$代替
+     * pie中方法, 生成pie实例时会自动挂载到实例上
      * @example
      * methods: {
      *     greet() {
@@ -196,39 +196,43 @@ export interface PieOptions<D extends {} = {}, E extends {} = {}, M extends Meth
     updated?(this: PieInstance<D, E, M, U>, oldVersion: string): void;
 }
 
-export type PieInstance<D extends {} = {}, E extends {} = {}, M extends MethodsOption = {}, U extends UserConfigMeta = {}> = {
-    /**
-     * pie logger
-     */
-    logger: Logger;
+export type PieInstance<D extends {} = {}, E extends {} = {}, M extends MethodsOption = {}, U extends UserConfigMeta = {}> =
+    {
+        /**
+         * pie logger
+         */
+        logger: Logger;
 
-    /**
-     * 是否为 pie 标志, 恒为 true
-     */
-    isPie: true;
+        /**
+         * 是否为 pie 标志, 恒为 true
+         */
+        isPie: true;
 
-    /**
-     * pie 的用户配置
-     */
-    configs: UserConfig<U>;
+        /**
+         * pie 的用户配置
+         */
+        configs: UserConfig<U>;
 
-    /**
-     * 返回pie的全限定名, 格式为: $namespace:$id
-     * @example
-     * "miraipie:foo"
-     * "miraipie:bar"
-     */
-    fullId: string;
+        /**
+         * 返回pie的全限定名, 格式为: $namespace:$id
+         * @example
+         * "miraipie:foo"
+         * "miraipie:bar"
+         */
+        fullId: string;
 
-    /**
-     * 获取依赖项pie的导出对象
-     * @param fullId 依赖项的全限定名
-     * @example
-     * // {foo: 'bar'}
-     * this.require('miraipie:foo');
-     */
-    require(fullId: string): Promise<object>;
-} & Readonly<M> & PieOptions<D, E, M, U>;
+        /**
+         * 获取依赖项pie的导出对象
+         * @param fullId 依赖项的全限定名
+         * @private
+         * @example
+         * // {foo: 'bar'}
+         * this.require('miraipie:foo');
+         */
+        require(fullId: string): Promise<object>;
+    }
+    & Readonly<M>
+    & PieOptions<D, E, M, U>;
 
 /**
  * A delicious pie
@@ -573,7 +577,7 @@ export class PieAgent {
         // 构造聊天窗
         let window: ChatWindow = null;
         if (chatMessage.type === 'FriendMessage') window = new FriendChatWindow(chatMessage.sender as Friend);
-        else if (chatMessage.type === 'GroupMessage') window = new GroupChatWindow(chatMessage.sender as Group);
+        else if (chatMessage.type === 'GroupMessage') window = new GroupChatWindow((chatMessage.sender as GroupMember).group, chatMessage.sender as GroupMember);
         else if (chatMessage.type === 'TempMessage') window = new TempChatWindow(chatMessage.sender as GroupMember);
 
         // 使聊天窗和消息链只读

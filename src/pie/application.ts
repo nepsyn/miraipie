@@ -124,7 +124,7 @@ export class MiraiPieApp {
             sourceId: chatMessage.messageChain.sourceId,
             messageChain: chatMessage.messageChain,
             from: chatMessage.sender.id,
-            to: this.qq,
+            to: chatMessage.type === 'GroupMessage' ? (chatMessage.sender as GroupMember).group.id : this.qq,
             type: chatMessage.type
         }));
         this.onEvent((event) => this.pieAgent.eventDispatcher(event));

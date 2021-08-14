@@ -7,7 +7,7 @@ import {
     Face,
     File,
     FlashImage,
-    ForwardMessage,
+    Forward,
     ForwardNode,
     Image,
     Json,
@@ -229,9 +229,9 @@ export function ForwardNode(senderId: number, time: number, senderName: number, 
  * 构造合并转发消息
  * @param nodeList 结点列表
  */
-export function ForwardMessage(nodeList: ForwardNode[]): ForwardMessage {
+export function Forward(nodeList: ForwardNode[]): Forward {
     return {
-        type: 'ForwardMessage',
+        type: 'Forward',
         nodeList,
         toDisplayString, toMiraiCode
     };

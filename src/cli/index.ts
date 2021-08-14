@@ -23,7 +23,11 @@ log4js.configure({
     categories: {
         default: {
             appenders: ['console', 'file'],
-            level: process.env.NODE_ENV === 'production' ? 'info' : 'debug'
+            level: 'debug'
+        },
+        cli: {
+            appenders: ['console'],
+            level: 'info'
         }
     }
 });
@@ -125,7 +129,7 @@ program
     .option('-v, --verbose', '控制台打印miraipie接收到的消息和事件')
     .action(async (opts) => {
         const db = fs.existsSync(program.opts().dbFile) ? new Sqlite3Adapter(program.opts().dbFile) : Sqlite3Adapter.create(program.opts().dbFile);
-        if (db.open && fs.statSync(program.opts().dbFile).size / Math.pow(2, 30) > 1) {
+        if (db.open && fs.statSync(program.opts().dbFile).size / (2 ** 30) > 1) {
             logger.warn('数据库文件大小已超过1GB, 建议使用命令 `miraipie clear-history` 清除历史消息记录');
         }
 

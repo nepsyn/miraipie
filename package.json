@@ -1,6 +1,6 @@
 {
   "name": "miraipie",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "the most powerful nodejs development kit for mirai-api-http",
   "main": "lib/miraipie.js",
   "types": "types/miraipie.d.ts",
@@ -36,9 +36,9 @@
   "files": [
     "assets",
     "bin",
+    "demo",
     "lib",
     "src",
-    "types",
-    "packages"
+    "types"
   ]
 }

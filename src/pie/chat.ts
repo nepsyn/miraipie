@@ -132,7 +132,7 @@ export class FriendChatWindow extends ChatWindow {
 export class GroupChatWindow extends ChatWindow {
     readonly type = 'GroupChatWindow';
 
-    constructor(public readonly contact: Group) {
+    constructor(public readonly contact: Group, public readonly sender: GroupMember) {
         super();
     }
 

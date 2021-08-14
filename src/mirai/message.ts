@@ -225,7 +225,7 @@ export function toMiraiCode<T extends SingleMessage>(this: T): string {
     else if (isType(this, 'Poke')) return `[mirai:poke:${this.name}]`;
     else if (isType(this, 'Dice')) return `[mirai:dice:${this.value}]`;
     else if (isType(this, 'MusicShare')) return `[mirai:musicshare:${this.kind},${this.title},${this.summary},${this.jumpUrl},${this.pictureUrl},${this.musicUrl},${this.brief}]`;
-    else if (isType(this, 'ForwardMessage')) return `[mirai:forward:${this.nodeList.length}]`;
+    else if (isType(this, 'Forward')) return `[mirai:forward:${this.nodeList.length}]`;
     else if (isType(this, 'File')) return `[mirai:file:${this.id},${this.name},${this.size}]`;
     else if (isType(this, 'MiraiCode')) return this.code;
     else return `[mirai:unknown]`;
@@ -253,7 +253,7 @@ export function toDisplayString<T extends SingleMessage>(this: T): string {
     else if (isType(this, 'Poke')) return `[戳一戳]`;
     else if (isType(this, 'Dice')) return `[骰子:${this.value}]`;
     else if (isType(this, 'MusicShare')) return `[分享]${this.title}`;
-    else if (isType(this, 'ForwardMessage')) return `[转发消息]`;
+    else if (isType(this, 'Forward')) return `[转发消息]`;
     else if (isType(this, 'File')) return `[文件]${this.name}`;
     else return `[不支持的消息类型#${this.type}]`;
 }
@@ -546,8 +546,8 @@ export interface ForwardNode {
 /**
  * 合并转发型
  */
-export interface ForwardMessage extends SingleMessage {
-    type: 'ForwardMessage';
+export interface Forward extends SingleMessage {
+    type: 'Forward';
     /**
      * 结点列表
      */
@@ -600,7 +600,7 @@ export type SingleMessageMap = {
     Poke: Poke,
     Dice: Dice,
     MusicShare: MusicShare,
-    ForwardMessage: ForwardMessage,
+    Forward: Forward,
     File: File,
     MiraiCode: MiraiCode
 };
