@@ -1,14 +1,14 @@
-const MiraiPie = require('miraipie');
-const {Pie, PieFilter} = MiraiPie.Pie;
+const {makePie, PieFilter} = require('miraipie');
 
-module.exports = new Pie({
-    namespace: 'miraipie',
-    id: 'repeater',
-    name: '复读机',
-    version: '1.0.0',
-    author: 'Nepsyn',
-    filters: [PieFilter.fromFriend],
-    async messageHandler(window, chain) {
-        await window.send(chain);
-    }
-});
+module.exports = (ctx) => {
+    ctx.pie(makePie({
+        id: 'repeater',
+        name: '复读机',
+        version: '1.0.0',
+        author: 'Nepsyn',
+        filters: [PieFilter.fromFriend],
+        async received(window, chain) {
+            await window.send(chain);
+        }
+    }));
+};

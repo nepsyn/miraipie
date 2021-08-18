@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.1.0
+
+- 修复 `pie` 加载相关问题。
+- 修改 `pie` 中事件监听的方式改为 `EventEmitter` 风格。
+- 修改 `pie` 引入方式和编写模式。
+- 添加 用户可自行编写用于与 mirai-api-http 交互的客户端 adapter。
+- 添加 `miraipie` 继承 `EventEmitter` 可以用于消息和事件监听。
+- 删除 数据库系统。
+- 添加 使用配置文件系统管理应用。
+
+
 ## v1.0.5
 
 - 修复 只读属性问题。

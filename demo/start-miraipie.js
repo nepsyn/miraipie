@@ -1,42 +1,35 @@
-const MiraiPie = require('miraipie');
-const config = require('./config.json');
-const log4js = require('log4js');
+const {createApp, ApplicationConfig} = require('miraipie');
+const config = require('./miraipie.json');
 
-// 配置日志系统
-log4js.configure({
-    appenders: {
-        console: {
-            type: 'console'
-        }
-    },
-    categories: {
-        default: {
-            appenders: ['console'],
-            level: 'debug'
-        },
-    }
-});
-
-// const app = MiraiPie({
-//     qq: 747337480,
-//     adapterSetting: {
-//         verifyKey: 'verify key',
-//         host: '127.0.0.1',
-//         port: 23333
+// const app = createApp(ApplicationConfig.make({
+//     qq: 123456789,
+//     adapterInUse: 'mixed',
+//     logDirectory: 'log',
+//     logLevel: 'debug',
+//     verbose: false,
+//     adapters: {
+//         mixed: {
+//             configs: {
+//                 verifyKey: 'verify key',
+//                 host: '127.0.0.1',
+//                 port: 23333
+//             }
+//         }
 //     },
-//     adapter: 'HttpAdapter',
-//     listenerAdapter: 'WebsocketAdapter'
-// });
-const app = MiraiPie(config);
+//     pies: {
+//         repeater: {
+//             module: './repeater-pie',
+//             enabled: true,
+//             configs: {}
+//         }
+//     }
+// }));
+const app = createApp(ApplicationConfig.make(config));
 
 // 消息监听
-app.onMessage((chatMessage) => {
-    console.log(chatMessage);
-});
+app.on('message', console.log);
 
 // 事件监听
-app.onEvent((event) => {
-    console.log(event);
-});
+app.on('event', console.log);
 
 app.listen();

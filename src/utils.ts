@@ -1,5 +1,3 @@
-import path from 'path';
-
 /**
  * 将目标对象中的所有属性设置为只读
  * @param target 目标对象
@@ -38,15 +36,6 @@ export function makeAsync<T, D>(func: (...args: any[]) => Promise<T> | T, thisAr
  */
 export async function sleep(ms: number = 100): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * 获取资源文件路径
- * @param name 资源文件名
- * @return 资源文件路径
- */
-export function getAssetPath(name: string): string {
-    return path.normalize(path.join(__dirname, `../../assets/${name}`));
 }
 
 /**

@@ -9,7 +9,7 @@
 - 安装 [mirai-console](https://github.com/mamoe/mirai-console)
   并启用 [mirai-api-http](https://github.com/project-mirai/mirai-api-http) 插件。
   推荐使用 [mirai-console-loader](https://github.com/iTXTech/mirai-console-loader) 一键启动 mirai-console 并加载插件。
-- 填写 mirai-api-http 插件配置文件，并保证至少启用了 [http adapter](https://github.com/project-mirai/mirai-api-http#adapter) 。
+- 填写 mirai-api-http 插件配置文件, 并保证至少启用了 [http adapter](https://github.com/project-mirai/mirai-api-http#adapter) 。
 - 在 mirai-console 中登录自己的机器人账号。
 
 ### 安装 `miraipie`
@@ -37,7 +37,7 @@
 
 ### 启动 `miraipie` 应用程序
 
-对于一般用户，建议使用 `miraipie` 提供的 cli 工具直接启动应用程序：
+对于一般用户, 建议使用 `miraipie` 提供的 cli 工具直接启动应用程序：
 
 ```shell
 # 查看命令帮助
@@ -46,7 +46,7 @@
 > miraipie start
 ```
 
-对于编程式的用户，建议参阅 demo 文件夹中的 [tart-miraipie.js](demo/start-miraipie.js) 文件查看基础用法。
+对于编程式的用户, 建议参阅 demo 文件夹中的 [tart-miraipie.js](demo/start-miraipie.js) 文件查看基础用法。
 
 ## 编写 pie( `miraipie` 中的独立插件)
 
@@ -58,12 +58,9 @@
 
 ```shell
 # 使用命令新建 pie 项目
-> miraipie create miraipie:repeater
-√ 请输入namespace » miraipie
-√ 请输入id » repeater
-√ 请输入名称 » repeater
-√ 请输入存放位置 » pies/repeater/
-[2021-08-11T23:21:13.295] [INFO] console - 创建pie项目完成
+> miraipie pie create
+√ 请输入pie项目存放位置 · pies/repeater/
+[2021-08-11T23:21:13.295] [INFO] cli - 已使用模板创建pie项目
 ```
 
 ### 编写指南
@@ -76,20 +73,23 @@ TODO
 
 ```shell
 # 使用命令导入 pie
-> miraipie add pies/repeater
+> miraipie install pies/repeater
 ```
 
 # 更新日志
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-## v1.0.5
+## v1.1.0
 
-- 修复 只读属性问题。
-- 优化 部分类型定义。
-- 优化 日志记录方式。
-- 添加 未捕获异常的全局处理。
+- 修复 `pie` 加载相关问题。
+- 修改 `pie` 中事件监听的方式改为 `EventEmitter` 风格。
+- 修改 `pie` 引入方式和编写模式。
+- 添加 用户可自行编写用于与 mirai-api-http 交互的客户端 adapter。
+- 添加 `miraipie` 继承 `EventEmitter` 可以用于消息和事件监听。
+- 删除 数据库系统。
+- 添加 使用配置文件系统管理应用。
 
 # 许可
 
-本项目遵循 AGPL-3.0 许可协议，详见 [LICENSE](LICENSE) 文件。
+本项目遵循 AGPL-3.0 许可协议, 详见 [LICENSE](LICENSE) 文件。

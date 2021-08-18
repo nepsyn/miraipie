@@ -1,0 +1,24 @@
+{
+  "qq": 123456789,
+  "adapterInUse": "mixed",
+  "logDirectory": "log",
+  "logLevel": "debug",
+  "verbose": false,
+  "adapters": {
+    "mixed": {
+      "configs": {
+        "verifyKey": "verify key",
+        "host": "127.0.0.1",
+        "port": 23333
+      }
+    }
+  },
+  "pies": {
+    "repeater": {
+      "module": "./repeater-pie",
+      "enabled": true,
+      "configs": {}
+    }
+  },
+  "extensions": []
+}
