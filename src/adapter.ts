@@ -478,10 +478,10 @@ export function makeApiAdapter<C extends ConfigMeta, D extends {}, M extends Met
         __isApiAdapter: true
     });
 
-    if (typeof installed === 'function') adapter.on('installed', installed);
-    if (typeof uninstalled === 'function') adapter.on('uninstalled', uninstalled);
-    if (typeof used === 'function') adapter.on('used', used);
-    if (typeof unused === 'function') adapter.on('unused', unused);
+    if (typeof installed === 'function') adapter.on('installed', () => installed.apply(adapter));
+    if (typeof uninstalled === 'function') adapter.on('uninstalled', () => uninstalled.apply(adapter));
+    if (typeof used === 'function') adapter.on('used', () => used.apply(adapter));
+    if (typeof unused === 'function') adapter.on('unused', () => unused.apply(adapter));
 
     return adapter as MiraiApiHttpAdapter<C, D, M>;
 }

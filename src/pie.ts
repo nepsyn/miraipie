@@ -333,11 +333,11 @@ export function makePie<C extends ConfigMeta, D extends {}, M extends MethodsOpt
         __isPie: true
     });
 
-    if (typeof options.received === 'function') pie.on('received', options.received);
-    if (typeof options.installed === 'function') pie.on('installed', options.installed);
-    if (typeof options.uninstalled === 'function') pie.on('uninstalled', options.uninstalled);
-    if (typeof options.enabled === 'function') pie.on('enabled', options.enabled);
-    if (typeof options.disabled === 'function') pie.on('disabled', options.disabled);
+    if (typeof options.received === 'function') pie.on('received', (...args) => options.received.apply(pie, args));
+    if (typeof options.installed === 'function') pie.on('installed', () => options.installed.apply(pie));
+    if (typeof options.uninstalled === 'function') pie.on('uninstalled', () => options.uninstalled.apply(pie));
+    if (typeof options.enabled === 'function') pie.on('enabled', () => options.enabled.apply(pie));
+    if (typeof options.disabled === 'function') pie.on('disabled', () => options.disabled.apply(pie));
 
     return pie as Pie<C, D, M>;
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.3
+
+- 修复 `pie` 和 `adapter` 生命周期钩子问题。
+
 ## v1.1.2
 
 - 修复 `MessageChain` 方法丢失问题。
