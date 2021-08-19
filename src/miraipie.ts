@@ -146,7 +146,7 @@ export class MiraiPieApplication extends EventEmitter {
         else return;
 
         chat = makeReadonly(chat);
-        const chain = makeReadonly(chatMessage.messageChain);
+        const chain = makeReadonly(MessageChain.from(chatMessage.messageChain));
 
         for (const [id, enabled] of this.__piesEnabledMap.entries()) {
             if (enabled) {

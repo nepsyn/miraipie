@@ -80,9 +80,9 @@ TODO
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-## v1.1.1
+## v1.1.2
 
-- 优化 pie项目代码模板文件。
+- 修复 `MessageChain` 方法丢失问题。
 
 # 许可
 

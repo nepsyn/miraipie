@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.2
+
+- 修复 `MessageChain` 方法丢失问题。
+
 ## v1.1.1
 
 - 优化 pie项目代码模板文件。
