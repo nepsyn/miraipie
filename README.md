@@ -80,9 +80,10 @@ TODO
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-## v1.1.3
+## v1.1.4
 
-- 修复 `pie` 和 `adapter` 生命周期钩子问题。
+- 优化 `adapter` 部分类型定义。
+- 修复 `MessageChain` 的 `selected` 和 `dropped` 方法。
 
 # 许可
 

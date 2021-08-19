@@ -165,7 +165,7 @@ export class MessageChain extends Array<SingleMessage> {
      * chain;
      */
     selected<T extends SingleMessageType>(type: T): MessageChain {
-        return MessageChain.from(this.filter((message) => message.type === type));
+        return MessageChain.from(Array.from(this).filter((message) => message.type === type));
     }
 
     /**
@@ -198,7 +198,7 @@ export class MessageChain extends Array<SingleMessage> {
      * chain;
      */
     dropped<T extends SingleMessageType>(type: T): MessageChain {
-        return MessageChain.from(this.filter((message) => message.type !== type));
+        return MessageChain.from(Array.from(this).filter((message) => message.type !== type));
     }
 
     /**

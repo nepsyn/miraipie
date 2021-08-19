@@ -16,11 +16,10 @@ import {
     GroupMember,
     GroupMemberResponse,
     MemberListResponse,
-    MessageChain,
     MessageFromIdResponse,
     NudgeKind,
     ProfileResponse,
-    SendMessageResponse,
+    SendMessageResponse, SingleMessage,
     UploadFileResponse,
     UploadImageResponse,
     UploadVoiceResponse,
@@ -74,7 +73,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param messageChain 消息链或消息数组
      * @param quoteMessageId 引用回复的消息id
      */
-    sendFriendMessage(friendId: number, messageChain: MessageChain, quoteMessageId?: number): Promise<SendMessageResponse>;
+    sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId?: number): Promise<SendMessageResponse>;
 
     /**
      * 发送群消息
@@ -82,7 +81,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param messageChain 消息链或消息数组
      * @param quoteMessageId 引用回复的消息id
      */
-    sendGroupMessage(groupId: number, messageChain: MessageChain, quoteMessageId?: number): Promise<SendMessageResponse>;
+    sendGroupMessage(groupId: number, messageChain: SingleMessage[], quoteMessageId?: number): Promise<SendMessageResponse>;
 
     /**
      * 发送群临时会话消息
@@ -91,7 +90,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param messageChain 消息链或消息数组
      * @param quoteMessageId 引用回复的消息id
      */
-    sendTempMessage(memberId: number, groupId: number, messageChain: MessageChain, quoteMessageId?: number): Promise<SendMessageResponse>;
+    sendTempMessage(memberId: number, groupId: number, messageChain: SingleMessage[], quoteMessageId?: number): Promise<SendMessageResponse>;
 
     /**
      * 发送头像戳一戳消息
@@ -287,7 +286,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * console 支持以不同消息类型作为指令的参数, 执行命令需要以消息类型作为参数, 若执行纯文本的命令, 构建多个 Plain 格式的消息 console 会将第一个消息作为指令名, 后续消息作为参数 具体参考 <a href="https://docs.mirai.mamoe.net/console/Commands.html">console 文档</a>
      * @param command 命令与参数
      */
-    executeCommand?(command: MessageChain): Promise<ApiResponse>;
+    executeCommand?(command: SingleMessage[]): Promise<ApiResponse>;
 
     /**
      * 注册命令

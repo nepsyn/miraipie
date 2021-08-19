@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.4
+
+- 优化 `adapter` 部分类型定义。
+- 修复 `MessageChain` 的 `selected` 和 `dropped` 方法。
+
 ## v1.1.3
 
 - 修复 `pie` 和 `adapter` 生命周期钩子问题。
