@@ -7,8 +7,8 @@ module.exports = (ctx) => {
         version: '1.0.0',
         author: 'Nepsyn',
         filters: [PieFilter.fromFriend],
-        async received(window, chain) {
-            await window.send(chain);
+        async received(chat, chain) {
+            await chat.send(chain);
         }
     }));
 };

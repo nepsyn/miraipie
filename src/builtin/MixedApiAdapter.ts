@@ -13,7 +13,6 @@ import {
     ResponseCode,
     SingleMessage
 } from '../mirai';
-import {MiraiPieApplication} from '../miraipie';
 
 type UploadType = 'friend' | 'group' | 'temp';
 

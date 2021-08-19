@@ -10,7 +10,7 @@ type ConfigConstructor<T> = {
 type ConfigDefaultFactory<T> = (...args: []) => T;
 
 /** 配置项 */
-interface Config<T> {
+interface Config<T = any, D = T> {
     /** 配置类型 */
     type: ConfigConstructor<T>;
     /** 是否必要 */
@@ -18,12 +18,12 @@ interface Config<T> {
     /** 配置项描述 */
     description?: string;
     /** 默认值工厂函数 */
-    default?: ConfigDefaultFactory<T>;
+    default?: ConfigDefaultFactory<D>;
 }
 
 /** 配置元定义 */
-export interface ConfigMeta<T = any> {
-    [key: string]: Config<T>;
+export interface ConfigMeta {
+    [key: string]: Config;
 }
 
 /** 用户配置 */

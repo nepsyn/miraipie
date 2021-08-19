@@ -1,6 +1,6 @@
 {
   "name": "miraipie",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "the most powerful nodejs development kit for mirai-api-http",
   "main": "lib/miraipie.js",
   "types": "types/miraipie.d.ts",
@@ -16,7 +16,12 @@
     "mirai",
     "mirai-api-http"
   ],
-  "author": "Nepsyn",
+  "author": "Nepsyn <nepsyn@outlook.com>",
+  "bugs": "https://github.com/nepsyn/miraipie/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nepsyn/miraipie.git"
+  },
   "license": "AGPL-3.0",
   "devDependencies": {
     "@types/fs-extra": "^9.0.12",

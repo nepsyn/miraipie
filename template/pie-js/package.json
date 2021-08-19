@@ -9,7 +9,7 @@
   ],
   "author": "",
   "license": "AGPL-3.0",
-  "devDependencies": {
+  "peerDependencies": {
     "miraipie": "^1.1.0"
   },
   "dependencies": {

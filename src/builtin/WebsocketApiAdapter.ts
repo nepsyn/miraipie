@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import {makeApiAdapter} from '../adapter';
 import {ApiResponse, ChatMessage, Event, GroupConfig, GroupMember, NudgeKind, SingleMessage} from '../mirai';
-import {MiraiPieApplication, ResponseCode} from '../miraipie';
+import {ResponseCode} from '../miraipie';
 import {sleep} from '../utils';
 
 function* generateSyncId(): Generator<number> {

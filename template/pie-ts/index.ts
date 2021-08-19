@@ -7,7 +7,7 @@ module.exports = (ctx: MiraiPieApplication) => {
         version: '0.0.1',
         author: '',
         filters: [],
-        async received(window, chain) {
+        async received(chat, chain) {
             // do something...
         }
     }));

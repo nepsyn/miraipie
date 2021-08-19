@@ -3,7 +3,6 @@ import FormData from 'form-data';
 import {ReadStream} from 'fs';
 import {makeApiAdapter} from '../adapter';
 import {ChatMessage, Event, GroupConfig, GroupMember, NudgeKind, ResponseCode, SingleMessage} from '../mirai';
-import {MiraiPieApplication} from '../miraipie';
 import {sleep} from '../utils';
 
 type UploadType = 'friend' | 'group' | 'temp';
