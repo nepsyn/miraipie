@@ -139,7 +139,6 @@ interface MethodsOption {
 
 type MessageReceivedListener = (chat: Chat, chain: MessageChain) => any;
 type LifecycleHookListener = () => any;
-type UpdateListener = (oldVersion: string) => any;
 
 type PieHookOptions = {
     /**
