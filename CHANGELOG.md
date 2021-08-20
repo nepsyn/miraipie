@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.5
+
+- 优化 CLI添加拓展逻辑。
+- 优化 CLI配置填写提示。
+- 添加 `SingleMessage` 添加方法 `isType` 用于特定情况的类型保护。
+- 优化 `MessageChain` 的实现。
+
 ## v1.1.4
 
 - 优化 `adapter` 部分类型定义。

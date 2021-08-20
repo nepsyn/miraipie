@@ -80,10 +80,10 @@ TODO
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-## v1.1.4
-
-- 优化 `adapter` 部分类型定义。
-- 修复 `MessageChain` 的 `selected` 和 `dropped` 方法。
+- 优化 CLI添加拓展逻辑。
+- 优化 CLI配置填写提示。
+- 添加 `SingleMessage` 添加方法 `isType` 用于特定情况的类型保护。
+- 优化 `MessageChain` 的实现。
 
 # 许可
 

@@ -7,7 +7,8 @@ import MixedApiAdapter from './builtin/MixedApiAdapter';
 import WebSocketApiAdapter from './builtin/WebsocketApiAdapter';
 import {Chat, FriendChat, GroupChat, TempChat} from './chat';
 import {ApplicationConfig, checkUserConfig} from './config';
-import {ChatMessage, ChatMessageType, Event, EventType, Friend, GroupMember, MessageChain} from './mirai';
+import {MessageChain} from './message';
+import {ChatMessage, ChatMessageType, Event, EventType, Friend, GroupMember} from './mirai';
 import {Pie} from './pie';
 import {makeReadonly} from './utils';
 
@@ -79,15 +80,16 @@ export class MiraiPieApplication extends EventEmitter {
 
         if (this.config.verbose) {
             this.on('message', (chatMessage) => {
+                const displayString = (chatMessage.messageChain as MessageChain).toDisplayString()
                 if (chatMessage.type === 'FriendMessage') {
                     const sender = chatMessage.sender as Friend;
-                    this.logger.info(`${sender.nickname}(${sender.id}) -> ${chatMessage.messageChain.toDisplayString()}`);
+                    this.logger.info(`${sender.nickname}(${sender.id}) -> ${displayString}`);
                 } else if (chatMessage.type === 'GroupMessage') {
                     const sender = chatMessage.sender as GroupMember;
-                    this.logger.info(`[${sender.group.name}(${sender.group.id})] ${sender.memberName}(${sender.id}) -> ${chatMessage.messageChain.toDisplayString()}`);
+                    this.logger.info(`[${sender.group.name}(${sender.group.id})] ${sender.memberName}(${sender.id}) -> ${displayString}`);
                 } else if (chatMessage.type === 'TempMessage') {
                     const sender = chatMessage.sender as GroupMember;
-                    this.logger.info(`${sender.memberName}(${sender.id}) -> ${chatMessage.messageChain.toDisplayString()}`);
+                    this.logger.info(`${sender.memberName}(${sender.id}) -> ${displayString}`);
                 }
             });
             this.on('event', (event) => {
@@ -406,7 +408,7 @@ export class MiraiPieApplication extends EventEmitter {
     }
 }
 
-export {MessageChain, ResponseCode} from './mirai';
+export {ResponseCode} from './mirai';
 export * as Mirai from './mirai';
 export * from './adapter';
 export * from './pie';

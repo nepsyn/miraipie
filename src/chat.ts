@@ -1,11 +1,10 @@
-import {Plain} from './message';
+import {Plain, MessageChain} from './message';
 import {
     FileOverview,
     Friend,
     Group, GroupConfig,
     GroupMember,
     GroupPermission,
-    MessageChain,
     Profile,
     ResponseCode,
     SingleMessage

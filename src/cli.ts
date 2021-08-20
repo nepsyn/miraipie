@@ -32,15 +32,15 @@ const banner = `
 function MiraiPieApplicationMock() {
     return Object.assign(new EventEmitter(), {
         config: {},
-        extension: null,
+        extensions: [],
         install(extension: MiraiApiHttpAdapter | Pie) {
-            this.extension = extension;
+            this.extension.push(extension);
         },
         adapter(adapter: MiraiApiHttpAdapter) {
-            this.extension = adapter;
+            this.extension.push(adapter);
         },
         pie(pie: Pie) {
-            this.extension = pie;
+            this.extension.push(pie);
         },
         useAdapter: () => undefined,
         uninstallAdapter: () => undefined,
@@ -65,9 +65,10 @@ async function writeUserConfig(configMeta: ConfigMeta) {
         const type = typeof meta.type();
         if (type === 'number') question.type = 'numeral';
         else if (type === 'boolean') question.type = 'confirm';
-        else question.type = 'input';
-        return question;
-    });
+        else if (type === 'string') question.type = 'input';
+        else logger.warn(`暂不支持CLI填写的配置类型: ${type} , 请手动填写配置文件`);
+        return question.type ? question : null;
+    }).filter((question) => !!question);
     try {
         return await prompt(questions);
     } catch (e) {
@@ -165,28 +166,30 @@ program
             const mockApp = MiraiPieApplicationMock();
             try {
                 require(path.join(process.cwd(), module))(mockApp);
-                if ((mockApp.extension?.__isPie || mockApp.extension?.__isApiAdapter) && mockApp.extension.id) {
-                    writeUserConfig(mockApp.extension.configMeta || {}).then((userConfigs) => {
-                        if (mockApp.extension.__isPie) {
-                            config.pies[mockApp.extension.id] = {
-                                module,
-                                enabled: true,
-                                configs: userConfigs
-                            };
-                            logger.info(`已添加pie '${mockApp.extension.id}'`);
-                        } else if (mockApp.extension.__isApiAdapter) {
-                            config.adapters[mockApp.extension.id] = {
-                                module,
-                                configs: userConfigs
-                            };
-                            logger.info(`已添加adapter '${mockApp.extension.id}'`);
-                        }
+                for (const extension of mockApp.extensions) {
+                    if ((extension.__isPie || extension.__isApiAdapter) && extension.id) {
+                        writeUserConfig(extension.configMeta || {}).then((userConfigs) => {
+                            if (extension.__isPie) {
+                                config.pies[extension.id] = {
+                                    module,
+                                    enabled: true,
+                                    configs: userConfigs
+                                };
+                                logger.info(`已添加pie '${extension.id}'`);
+                            } else if (extension.__isApiAdapter) {
+                                config.adapters[extension.id] = {
+                                    module,
+                                    configs: userConfigs
+                                };
+                                logger.info(`已添加adapter '${extension.id}'`);
+                            }
+                            saveConfigFile(config, program.opts().config);
+                        });
+                    } else {
+                        config.extensions.push(module);
+                        logger.info(`已添加模块 ${module}`);
                         saveConfigFile(config, program.opts().config);
-                    });
-                } else {
-                    config.extensions.push(module);
-                    logger.info(`已添加模块 ${module}`);
-                    saveConfigFile(config, program.opts().config);
+                    }
                 }
             } catch (err) {
                 logger.error('添加模块失败:', err);

@@ -2,7 +2,8 @@ import EventEmitter from 'events';
 import {getLogger, Logger} from 'log4js';
 import {Chat} from './chat';
 import {ConfigMeta, makeConfigs, UserConfigs} from './config';
-import {At, MessageChain, SingleMessageType} from './mirai';
+import {MessageChain} from './message';
+import {At, SingleMessageType} from './mirai';
 import {MiraiPieApplication} from './miraipie';
 
 /** pie消息过滤器类型 */
