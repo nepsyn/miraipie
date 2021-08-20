@@ -80,10 +80,9 @@ TODO
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-- 优化 CLI添加拓展逻辑。
-- 优化 CLI配置填写提示。
-- 添加 `SingleMessage` 添加方法 `isType` 用于特定情况的类型保护。
-- 优化 `MessageChain` 的实现。
+## v1.1.6
+
+- 修复 `MessageChain` 构造后内部消息属性丢失问题。
 
 # 许可
 

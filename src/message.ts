@@ -93,7 +93,7 @@ export class MessageChain extends Array<SingleMessage> implements Mirai.MessageC
     constructor(...messages: SingleMessage[]) {
         super();
         Object.setPrototypeOf(this, MessageChain.prototype);
-        this.push(...messages.map((message) => ({...message, toDisplayString, toMiraiCode})));
+        this.push(...messages.map((message) => ({...message, isType, toDisplayString, toMiraiCode})));
     }
 
     /**
