@@ -45,7 +45,8 @@ export class MiraiPieApplication extends EventEmitter {
                     appenders: config.logDirectory ? ['console', 'file'] : ['console'],
                     level: config.logLevel || 'debug'
                 }
-            }
+            },
+            disableClustering: true
         });
 
         this.setMaxListeners(0);

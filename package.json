@@ -1,6 +1,6 @@
 {
   "name": "miraipie",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "the most powerful nodejs development kit for mirai-api-http",
   "main": "lib/miraipie.js",
   "types": "types/miraipie.d.ts",
