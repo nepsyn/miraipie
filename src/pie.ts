@@ -329,7 +329,7 @@ export function makePie<C extends ConfigMeta, D extends {}, M extends MethodsOpt
         configMeta: configMeta || {},
         configs: makeConfigs(configMeta),
         filters: options.filters || [],
-        logger: getLogger(`pie:${options.id}`),
+        logger: getLogger('pie'),
         __isPie: true
     });
 

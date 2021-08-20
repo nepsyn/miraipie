@@ -473,7 +473,7 @@ export function makeApiAdapter<C extends ConfigMeta, D extends {}, M extends Met
         configMeta: configMeta || {},
         configs: makeConfigs(options.configMeta),
         listening: false,
-        logger: getLogger(`adapter:${options.id}`),
+        logger: getLogger('adapter'),
         __isApiAdapter: true
     });
 

@@ -54,6 +54,7 @@ function MiraiPieApplicationMock() {
 
 // 填写用户配置
 async function writeUserConfig(configMeta: ConfigMeta) {
+    const unsupportedConfig = {};
     const questions = Object.keys(configMeta).map((name) => {
         const meta = configMeta[name];
         const question = {
@@ -66,11 +67,14 @@ async function writeUserConfig(configMeta: ConfigMeta) {
         if (type === 'number') question.type = 'numeral';
         else if (type === 'boolean') question.type = 'confirm';
         else if (type === 'string') question.type = 'input';
-        else logger.warn(`暂不支持CLI填写的配置类型: ${type} , 请手动填写配置文件`);
+        else {
+            logger.warn(`暂不支持CLI填写的配置项: ${name} 类型: ${type} , 请手动填写配置文件`);
+            unsupportedConfig[name] = typeof meta.default === 'function' ? meta.default() : null
+        }
         return question.type ? question : null;
     }).filter((question) => !!question);
     try {
-        return await prompt(questions);
+        return Object.assign(await prompt(questions), unsupportedConfig);
     } catch (e) {
         return {};
     }
