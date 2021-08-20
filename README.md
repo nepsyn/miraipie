@@ -80,9 +80,9 @@ TODO
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-## v1.1.6
+## v1.1.7
 
-- 修复 `MessageChain` 构造后内部消息属性丢失问题。
+- 修复 CLI加载拓展问题。
 
 # 许可
 

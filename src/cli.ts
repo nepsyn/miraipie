@@ -34,13 +34,13 @@ function MiraiPieApplicationMock() {
         config: {},
         extensions: [],
         install(extension: MiraiApiHttpAdapter | Pie) {
-            this.extension.push(extension);
+            this.extensions.push(extension);
         },
         adapter(adapter: MiraiApiHttpAdapter) {
-            this.extension.push(adapter);
+            this.extensions.push(adapter);
         },
         pie(pie: Pie) {
-            this.extension.push(pie);
+            this.extensions.push(pie);
         },
         useAdapter: () => undefined,
         uninstallAdapter: () => undefined,
