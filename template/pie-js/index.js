@@ -2,8 +2,8 @@ const {makePie} = require('miraipie');
 
 module.exports = (ctx) => {
     ctx.pie(makePie({
-        id: 'my-pie',
-        name: 'my pie',
+        id: '{{id}}',
+        name: '{{name}}',
         version: '0.0.1',
         author: '',
         filters: [],

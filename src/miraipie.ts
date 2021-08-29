@@ -105,7 +105,7 @@ export class MiraiPieApplication extends EventEmitter {
             this.logger.debug('捕获到未处理的异常:', error);
         });
         process.on('unhandledRejection', (reason) => {
-            this.logger.debug('捕获到未处理的reject:', reason);
+            this.logger.debug('捕获到未处理的rejection:', reason);
         });
 
         // 捕捉Ctrl-C
@@ -176,19 +176,17 @@ export class MiraiPieApplication extends EventEmitter {
      */
     adapter(adapter: MiraiApiHttpAdapter): this {
         if (!adapter.__isApiAdapter) {
-            this.logger.error(`加载 adapter 失败, ${adapter} 不是有效的 adapter`);
+            this.logger.error(`安装 adapter 失败, ${adapter} 不是有效的 adapter`);
             return this;
         }
         // 安装 adapter
         this.__apiAdapterMap.set(adapter.id, adapter);
         // 注册时事件
         adapter.on('message', async (chatMessage) => {
-            await this.__messageDispatcher(chatMessage);
-        });
-        adapter.on('message', (chatMessage) => {
             chatMessage.messageChain = MessageChain.from(chatMessage.messageChain);
             this.emit('message', chatMessage);
             this.emit(chatMessage.type, chatMessage);
+            await this.__messageDispatcher(chatMessage);
         });
         adapter.on('event', (event) => {
             this.emit('event', event);
@@ -206,12 +204,13 @@ export class MiraiPieApplication extends EventEmitter {
                 this.logger.warn(`当前使用的adapter: '${adapter.id}' 支持 mirai-api-http V${adapter.supportVersion}, 而服务端运行的版本为 V${resp.data.version}, 使用中可能产生兼容性问题`);
             }
         });
-        adapter.emit('installed');
         // 配置 adapter
         if (adapter.id in this.config.adapters) {
             adapter.configs = Object.assign(adapter.configs, this.config.adapters[adapter.id].configs);
             checkUserConfig(adapter.configMeta, adapter.configs, adapter.logger);
         }
+        this.logger.info(`已安装 adapter '${adapter.id}'`);
+        adapter.emit('installed');
         return this;
     }
 
@@ -257,13 +256,11 @@ export class MiraiPieApplication extends EventEmitter {
      */
     pie(pie: Pie): this {
         if (!pie.__isPie) {
-            this.logger.error(`加载 pie 失败, ${pie} 不是有效的 pie`);
+            this.logger.error(`安装 pie 失败, ${pie} 不是有效的 pie`);
             return this;
         }
         // 安装 pie
         this.__piesMap.set(pie.id, pie);
-        pie.emit('installed');
-        this.logger.info(`已安装 pie '${pie.id}'`);
         // 配置 pie
         if (pie.id in this.config.pies) {
             const pieConfig = this.config.pies[pie.id];
@@ -271,11 +268,13 @@ export class MiraiPieApplication extends EventEmitter {
             checkUserConfig(pie.configMeta, pie.configs, pie.logger);
             // 是否启用
             this.__piesEnabledMap.set(pie.id, pieConfig.enabled);
-            if (pieConfig.enabled) this.enable(pie.id);
         } else {
             // 自动启用
-            this.enable(pie.id);
+            this.__piesEnabledMap.set(pie.id, true);
         }
+        this.logger.info(`已安装 pie '${pie.id}'`);
+        pie.emit('installed');
+        if (this.__piesEnabledMap.get(pie.id)) this.enable(pie.id);
         return this;
     }
 

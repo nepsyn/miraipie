@@ -1,3 +1,4 @@
+import {execSync} from 'child_process';
 import {program} from 'commander';
 import {prompt} from 'enquirer';
 import EventEmitter from 'events';
@@ -7,6 +8,7 @@ import path from 'path';
 import MixedApiAdapter from './builtin/MixedApiAdapter';
 import {ApplicationConfig, ConfigMeta} from './config';
 import createApp, {MiraiApiHttpAdapter, Pie} from './miraipie';
+import {makeTemplate} from './utils';
 
 log4js.configure({
     appenders: {
@@ -213,15 +215,29 @@ pie
     .command('create')
     .description('使用模板创建pie项目')
     .aliases(['new', 'init'])
-    .argument('[path]', 'pie项目存放位置')
+    .argument('[id]', 'pie id')
     .option('-j, --javascript', '使用javascript模板')
-    .action((p, opts) => {
-        prompt({
-            type: 'input',
-            name: 'path',
-            message: '请输入pie项目存放位置',
-            initial: p || 'pies/my-pie'
-        }).then((pro: any) => {
+    .action((id, opts) => {
+        prompt([
+            {
+                type: 'input',
+                name: 'id',
+                message: '请输入pie id',
+                initial: id || 'my-pie'
+            },
+            {
+                type: 'input',
+                name: 'name',
+                message: '请输入pie名称',
+                initial: id || 'my-pie'
+            },
+            {
+                type: 'input',
+                name: 'path',
+                message: '请输入pie存放位置',
+                initial: `pies/${id || 'my-pie'}/`
+            }
+        ]).then((pro: any) => {
             const src = path.join(__dirname, opts.javascript ? '../template/pie-js' : '../template/pie-ts');
             fs.ensureDirSync(pro.path);
             fs.readdir(src, (err, files) => {
@@ -229,9 +245,17 @@ pie
                     logger.error('创建pie项目失败:', err);
                     return;
                 }
-                for (const file of files) fs.copyFileSync(path.resolve(src, file), path.resolve(pro.path, file));
+                for (const file of files) makeTemplate(path.resolve(src, file), path.resolve(pro.path, file), pro);
             });
             logger.info('已使用模板创建pie项目');
+            prompt({
+                type: 'confirm',
+                name: 'init',
+                message: '是否使用npm初始化pie项目',
+                initial: true
+            }).then((proConfirm: any) => {
+                if (proConfirm.init) execSync(`cd "${pro.path}" && npm install`);
+            }).catch(() => undefined);
         }).catch(() => {
             logger.info('已取消创建项目');
         });

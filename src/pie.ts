@@ -310,6 +310,8 @@ export type Pie<C extends ConfigMeta = {}, D extends {} = {}, M extends MethodsO
     & D & M
     & EventEmitter;
 
+
+const logger = getLogger('cli');
 /**
  * 创建 pie
  * @param options pie 选项
@@ -329,7 +331,7 @@ export function makePie<C extends ConfigMeta, D extends {}, M extends MethodsOpt
         configMeta: configMeta || {},
         configs: makeConfigs(configMeta),
         filters: options.filters || [],
-        logger: getLogger('pie'),
+        logger: logger,
         __isPie: true
     });
 

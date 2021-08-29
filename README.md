@@ -46,7 +46,7 @@
 > miraipie start
 ```
 
-对于编程式的用户, 建议参阅 demo 文件夹中的 [tart-miraipie.js](demo/start-miraipie.js) 文件查看基础用法。
+对于编程式的用户, 建议参阅 demo 文件夹中的 [start-miraipie.js](demo/start-miraipie.js) 文件查看基础用法。
 
 ## 编写 pie( `miraipie` 中的独立插件)
 
@@ -80,10 +80,12 @@ TODO
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-## v1.1.9
+## v1.1.10
 
 - 修复 日志系统事件问题。
-- 优化 CLI配置填写提示
+- 添加 等待下一条消息方法 `Chat.nextMessage(timeout: number)` 。
+- 优化 `pie` 和 `adapter` 生命周期钩子 `installed` 的执行时间。
+- 优化 CLI新建 `pie` 项目操作。
 
 # 许可
 

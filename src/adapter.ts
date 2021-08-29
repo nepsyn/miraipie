@@ -459,6 +459,8 @@ export type MiraiApiHttpAdapter<C extends ConfigMeta = {}, D extends {} = {}, M 
     & Readonly<MiraiApiHttpAdapterMethodOptions>
     & EventEmitter;
 
+
+const logger = getLogger('adapter');
 /**
  * 创建 api adapter
  * @param options adapter 选项
@@ -473,7 +475,7 @@ export function makeApiAdapter<C extends ConfigMeta, D extends {}, M extends Met
         configMeta: configMeta || {},
         configs: makeConfigs(options.configMeta),
         listening: false,
-        logger: getLogger('adapter'),
+        logger: logger,
         __isApiAdapter: true
     });
 

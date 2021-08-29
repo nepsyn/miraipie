@@ -40,8 +40,7 @@ export abstract class Chat {
      * 使用该方法向当前聊天对象发送一条消息
      * @param message 待发送的消息
      * @param quoteMessageId 引用回复的消息id
-     * @return
-     * 已发送消息的消息id
+     * @return 已发送消息的消息id
      * @example
      * chat.send('Hello World!');  // 纯文本消息
      * chat.send(AtAll());  // 单个单一消息
@@ -57,6 +56,21 @@ export abstract class Chat {
 
         return this._send(messageChain, quoteMessageId);
     }
+
+    /**
+     * 等待聊天窗口的下一条消息
+     * @param timeout 超时时间, 单位毫秒, 默认为0(不超时)
+     * @return 下一条消息的消息链
+     * @example
+     * async function kick(chat: Chat, someone: number) {
+     *     const next = await chat.nextMessage();
+     *     const confirmString = next.selected('Plain').toDisplayString();
+     *     if (confirmString === '是') {
+     *         await chat.send('已移出成员');
+     *     }
+     * }
+     */
+    abstract nextMessage(timeout?: number): Promise<MessageChain>;
 
     /**
      * 向当前聊天对象发送一个头像戳一戳
@@ -106,6 +120,23 @@ export class FriendChat extends Chat {
         return resp?.messageId;
     }
 
+    async nextMessage(timeout?: number): Promise<MessageChain> {
+        return new Promise((resolve, reject) => {
+            let flag = true;
+            MiraiPieApplication.instance.once('FriendMessage', (chatMessage) => {
+                if (this.sender.id === chatMessage.sender.id) {
+                    flag = false;
+                    resolve(MessageChain.from(chatMessage.messageChain));
+                }
+            });
+            if (timeout > 0) {
+                setTimeout(() => {
+                    if (flag) reject(new Error('等待消息已超时'));
+                }, timeout);
+            }
+        });
+    }
+
     async sendNudge(targetId?: number): Promise<boolean> {
         const resp = await MiraiPieApplication.instance.api.sendNudge(targetId || this.contact.id, this.contact.id, 'Friend');
         return resp?.code === ResponseCode.Success;
@@ -152,6 +183,23 @@ export class GroupChat extends Chat {
     protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
         const resp = await MiraiPieApplication.instance.api.sendGroupMessage(this.contact.id, messageChain, quoteMessageId);
         return resp?.messageId;
+    }
+
+    async nextMessage(timeout?: number): Promise<MessageChain> {
+        return new Promise((resolve, reject) => {
+            let flag = true;
+            MiraiPieApplication.instance.once('GroupMessage', (chatMessage) => {
+                if (this.sender.id === chatMessage.sender.id && this.contact.id === (chatMessage.sender as GroupMember).group.id) {
+                    flag = false;
+                    resolve(MessageChain.from(chatMessage.messageChain));
+                }
+            });
+            if (timeout > 0) {
+                setTimeout(() => {
+                    if (flag) reject(new Error('等待消息已超时'));
+                }, timeout);
+            }
+        });
     }
 
     async sendNudge(targetId: number): Promise<boolean> {
@@ -362,6 +410,23 @@ export class TempChat extends Chat {
     protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
         const resp = await MiraiPieApplication.instance.api.sendTempMessage(this.contact.id, this.contact.group.id, messageChain, quoteMessageId);
         return resp?.messageId;
+    }
+
+    async nextMessage(timeout?: number): Promise<MessageChain> {
+        return new Promise((resolve, reject) => {
+            let flag = true;
+            MiraiPieApplication.instance.once('TempMessage', (chatMessage) => {
+                if (this.sender.id === chatMessage.sender.id) {
+                    flag = false;
+                    resolve(MessageChain.from(chatMessage.messageChain));
+                }
+            });
+            if (timeout > 0) {
+                setTimeout(() => {
+                    if (flag) reject(new Error('等待消息已超时'));
+                }, timeout);
+            }
+        });
     }
 
     async sendNudge(targetId?: number): Promise<boolean> {

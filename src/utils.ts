@@ -1,3 +1,5 @@
+import fs from 'fs-extra';
+
 /**
  * 将目标对象中的所有属性设置为只读
  * @param target 目标对象
@@ -76,4 +78,18 @@ export function formatDate(date: Date): string {
         `${date.getHours().toString().padStart(2, '0')}:` +
         `${date.getMinutes().toString().padEnd(2, '0')}:` +
         `${date.getSeconds().toString().padStart(2, '0')}`;
+}
+
+/**
+ * 写入模板
+ * @param src 源文件
+ * @param dest 目标文件
+ * @param bindings 绑定值
+ */
+export function makeTemplate(src: string, dest: string, bindings: object) {
+    let content = fs.readFileSync(src).toString();
+    for (const key of Object.keys(bindings)) {
+        content = content.replace(`{{${key}}}`, bindings[key]);
+    }
+    fs.writeFileSync(dest, content);
 }

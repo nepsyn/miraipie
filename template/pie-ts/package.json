@@ -1,5 +1,5 @@
 {
-  "name": "my-pie",
+  "name": "{{id}}",
   "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
     "typescript": "^4.3.4"
   },
   "peerDependencies": {
-    "miraipie": "^1.1.6"
+    "miraipie": "^1.1.10"
   },
   "dependencies": {
   }
