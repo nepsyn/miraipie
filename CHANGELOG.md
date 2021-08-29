@@ -1,15 +1,17 @@
 # Changelog
 
-## v1.1.10
+## v1.1.11
 
 - 修复 日志系统事件问题。
+
+## v1.1.10
+
 - 添加 等待下一条消息方法 `Chat.nextMessage(timeout: number)` 。
 - 优化 `pie` 和 `adapter` 生命周期钩子 `installed` 的执行时间。
 - 优化 CLI新建 `pie` 项目操作。
 
 ## v1.1.9
 
-- 修复 日志系统事件问题。
 - 优化 CLI配置填写提示
 
 ## v1.1.8

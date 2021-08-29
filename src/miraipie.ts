@@ -2,9 +2,6 @@ import EventEmitter from 'events';
 import {configure, getLogger, Logger} from 'log4js';
 import path from 'path';
 import {MiraiApiHttpAdapter} from './adapter';
-import HttpApiAdapter from './builtin/HttpApiAdapter';
-import MixedApiAdapter from './builtin/MixedApiAdapter';
-import WebSocketApiAdapter from './builtin/WebsocketApiAdapter';
 import {Chat, FriendChat, GroupChat, TempChat} from './chat';
 import {ApplicationConfig, checkUserConfig} from './config';
 import {MessageChain} from './message';
@@ -30,6 +27,7 @@ export class MiraiPieApplication extends EventEmitter {
 
         this.qq = config.qq;
 
+        // 初始化log4js
         configure({
             appenders: {
                 console: {
@@ -54,11 +52,14 @@ export class MiraiPieApplication extends EventEmitter {
         this.__piesEnabledMap = new Map();
 
         // 加载内置 adapter
+        const HttpApiAdapter = require('./builtin/HttpApiAdapter');
+        const WebsocketApiAdapter = require('./builtin/WebsocketApiAdapter');
+        const MixedApiAdapter = require('./builtin/MixedApiAdapter');
         HttpApiAdapter.configs.qq = this.qq;
-        WebSocketApiAdapter.configs.qq = this.qq;
+        WebsocketApiAdapter.configs.qq = this.qq;
         MixedApiAdapter.configs.qq = this.qq;
         this.adapter(HttpApiAdapter);
-        this.adapter(WebSocketApiAdapter);
+        this.adapter(WebsocketApiAdapter);
         this.adapter(MixedApiAdapter);
 
         // 加载配置文件中的各项拓展

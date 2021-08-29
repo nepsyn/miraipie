@@ -1,7 +1,15 @@
 import WebSocket from 'ws';
 import {makeApiAdapter} from '../adapter';
-import {ApiResponse, ChatMessage, Event, GroupConfig, GroupMember, NudgeKind, SingleMessage} from '../mirai';
-import {ResponseCode} from '../miraipie';
+import {
+    ApiResponse,
+    ChatMessage,
+    Event,
+    GroupConfig,
+    GroupMember,
+    NudgeKind,
+    ResponseCode,
+    SingleMessage
+} from '../mirai';
 import {sleep} from '../utils';
 
 function* generateSyncId(): Generator<number> {
@@ -16,7 +24,7 @@ function* generateSyncId(): Generator<number> {
  * mirai-api-http 提供的 websocket adapter<br/>
  * @see <a href="https://github.com/project-mirai/mirai-api-http/blob/master/docs/adapter/WebsocketAdapter.md">文档<a/>
  */
-const WebSocketApiAdapter = makeApiAdapter({
+const WebsocketApiAdapter = makeApiAdapter({
     id: 'ws',
     supportVersion: '2.2.0',
     configMeta: {
@@ -253,4 +261,4 @@ const WebSocketApiAdapter = makeApiAdapter({
     }
 });
 
-export = WebSocketApiAdapter;
+export = WebsocketApiAdapter;

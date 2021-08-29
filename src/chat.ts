@@ -1,8 +1,9 @@
-import {Plain, MessageChain} from './message';
+import {MessageChain, Plain} from './message';
 import {
     FileOverview,
     Friend,
-    Group, GroupConfig,
+    Group,
+    GroupConfig,
     GroupMember,
     GroupPermission,
     Profile,

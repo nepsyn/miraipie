@@ -310,13 +310,11 @@ export type Pie<C extends ConfigMeta = {}, D extends {} = {}, M extends MethodsO
     & D & M
     & EventEmitter;
 
-
-const logger = getLogger('cli');
 /**
  * 创建 pie
  * @param options pie 选项
  */
-export function makePie<C extends ConfigMeta, D extends {}, M extends MethodsOption>(options: PieOptions<C, D, M>) {
+export function makePie<C extends ConfigMeta, D extends {}, M extends MethodsOption>(options: PieOptions<C, D, M>): Pie<C, D, M> {
     const {data, methods, configMeta} = options;
     const pie = Object.assign(new EventEmitter(), {
         ...(data || {}),
@@ -331,8 +329,8 @@ export function makePie<C extends ConfigMeta, D extends {}, M extends MethodsOpt
         configMeta: configMeta || {},
         configs: makeConfigs(configMeta),
         filters: options.filters || [],
-        logger: logger,
-        __isPie: true
+        logger: getLogger(`pie:${options.id}`),
+        __isPie: true as true
     });
 
     if (typeof options.received === 'function') pie.on('received', (...args) => options.received.apply(pie, args));
