@@ -330,7 +330,7 @@ export function makePie<C extends ConfigMeta, D extends {}, M extends MethodsOpt
         configs: makeConfigs(configMeta),
         filters: options.filters || [],
         logger: getLogger(`pie:${options.id}`),
-        __isPie: true as true
+        __isPie: true
     });
 
     if (typeof options.received === 'function') pie.on('received', (...args) => options.received.apply(pie, args));

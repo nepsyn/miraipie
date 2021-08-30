@@ -25,6 +25,9 @@ export class MiraiPieApplication extends EventEmitter {
         super();
         MiraiPieApplication.instance = this;
 
+        // 注册全局模块
+        process.env.MIRAIPIE_MODULE = module.id;
+
         this.qq = config.qq;
 
         // 初始化log4js
@@ -52,15 +55,15 @@ export class MiraiPieApplication extends EventEmitter {
         this.__piesEnabledMap = new Map();
 
         // 加载内置 adapter
-        const HttpApiAdapter = require('./builtin/HttpApiAdapter');
-        const WebsocketApiAdapter = require('./builtin/WebsocketApiAdapter');
-        const MixedApiAdapter = require('./builtin/MixedApiAdapter');
-        HttpApiAdapter.configs.qq = this.qq;
-        WebsocketApiAdapter.configs.qq = this.qq;
-        MixedApiAdapter.configs.qq = this.qq;
-        this.adapter(HttpApiAdapter);
-        this.adapter(WebsocketApiAdapter);
-        this.adapter(MixedApiAdapter);
+        const BuiltinApiAdapters = [
+            require('./builtin/HttpApiAdapter'),
+            require('./builtin/WebsocketApiAdapter'),
+            require('./builtin/MixedApiAdapter')
+        ];
+        for (const adapter of BuiltinApiAdapters) {
+            adapter.configs.qq = this.qq;
+            this.adapter(adapter);
+        }
 
         // 加载配置文件中的各项拓展
         const modules = new Set([
@@ -417,3 +420,8 @@ export * from './chat';
 export * from './config';
 export const createApp = MiraiPieApplication.createApp;
 export default createApp;
+
+// 当存在全局 miraipie 应用程序时, 使用全局模块
+if (process.env.MIRAIPIE_MODULE) {
+    module.exports = require(process.env.MIRAIPIE_MODULE);
+}
