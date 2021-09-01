@@ -46,7 +46,7 @@ export abstract class Chat {
      * chat.send('Hello World!');  // 纯文本消息
      * chat.send(AtAll());  // 单个单一消息
      * chat.send([AtAll(), Plain('Hello World!')]);  // 单一消息列表
-     * chat.send(new MessageChain(AtAll(), Plain('Hello World!')));  // 消息链对象
+     * chat.send(MessageChain.from([AtAll(), Plain('Hello World!')]));  // 消息链对象
      * chat.send('Hello World!', 123456);  // 发送消息并引用回复消息
      */
     async send(message: string | SingleMessage | MessageChain | SingleMessage[], quoteMessageId?: number): Promise<number> {

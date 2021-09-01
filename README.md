@@ -80,9 +80,9 @@ TODO
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-## v1.1.12
+## v1.1.13
 
-- 修复 应用程序插件上下文不一致问题。
+- 修复 `MessageChain` 构造问题。
 
 # 许可
 

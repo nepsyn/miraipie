@@ -82,18 +82,9 @@ function toDisplayString<T extends SingleMessage>(this: T): string {
 export class MessageChain extends Array<SingleMessage> implements Mirai.MessageChain {
     [index: number]: SingleMessage;
 
-    /**
-     * @param messages 单一消息
-     * @example
-     * // MessageChain(1) [{type: 'Plain', text: 'Hello World!'}]
-     * new MessageChain(Plain('Hello World!'));
-     * // MessageChain(2) [{type: 'AtAll'}, {type: 'Plain', text: 'Hello World!'}]
-     * new MessageChain(AtAll(), Plain('Hello World!'));
-     */
-    constructor(...messages: SingleMessage[]) {
-        super();
+    constructor(...args) {
+        super(...args);
         Object.setPrototypeOf(this, MessageChain.prototype);
-        this.push(...messages.map((message) => ({...message, isType, toDisplayString, toMiraiCode})));
     }
 
     /**
@@ -107,7 +98,9 @@ export class MessageChain extends Array<SingleMessage> implements Mirai.MessageC
      * MessageChain.from([AtAll(), Plain('Hello World!')]);
      */
     static from(messageList: SingleMessage[]): MessageChain {
-        return new MessageChain(...messageList);
+        const chain = new MessageChain();
+        chain.push(...messageList.map((message) => ({...message, isType, toDisplayString, toMiraiCode})));
+        return chain;
     }
 
     /**
