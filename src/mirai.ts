@@ -46,6 +46,8 @@ export type PlatformType = 'IOS' | 'MOBILE' | 'WINDOWS';
 
 /** 其他设备 */
 export interface OtherClient extends Contact {
+    /** 设备标识号 */
+    id: number;
     /** 设备平台 */
     platform: PlatformType;
 }
@@ -182,12 +184,12 @@ export interface Voice extends SingleMessage {
     type: 'Voice';
     /** 语音id */
     voiceId: string;
-    /** 语音链接 */
-    url: string;
     /** 语音文件路径 */
     path?: string;
     /** 语音Base64编码 */
     base64?: string;
+    /** 返回的语音长度 */
+    length?: number;
 }
 
 /** XML型 */
@@ -261,7 +263,7 @@ export interface ForwardNode {
     /** 消息链 */
     messageChain: SingleMessage[];
     /** 消息id */
-    sourceId: number;
+    messageId?: number;
 }
 
 /** 合并转发型 */
@@ -454,6 +456,8 @@ export interface BotUnmuteEvent extends GroupEvent {
 export interface BotJoinGroupEvent extends GroupEvent {
     type: 'BotJoinGroupEvent';
     group: Group;
+    /** 邀请人 */
+    invitor?: GroupMember;
 }
 
 /** Bot主动退出一个群事件 */
@@ -466,6 +470,8 @@ export interface BotLeaveEventActive extends GroupEvent {
 export interface BotLeaveEventKick extends GroupEvent {
     type: 'BotLeaveEventKick';
     group: Group;
+    /** 操作人 */
+    operator?: GroupMember;
 }
 
 /** 群消息撤回事件 */
@@ -550,6 +556,8 @@ export interface GroupAllowMemberInviteEvent extends GroupEvent {
 /** 新人入群事件 */
 export interface MemberJoinEvent extends MemberEvent {
     type: 'MemberJoinEvent';
+    /** 邀请人 */
+    invitor?: GroupMember;
 }
 
 /** 群成员被踢出群事件, 该成员不是Bot */
@@ -647,6 +655,8 @@ export interface CommandExecutedEvent extends CommandEvent {
 /** 其他设备上线事件 */
 export interface OtherClientOnlineEvent extends OtherClientEvent {
     type: 'OtherClientOnlineEvent';
+    /** 设备详细类型 */
+    kind?: number;
 }
 
 /** 其他设备下线事件 */
@@ -833,6 +843,14 @@ export interface FileOverview {
         sha1: string;
         /** 文件md5 */
         md5: string;
+        /** 下载次数 */
+        downloadTimes: number;
+        /** 上传人QQ号 */
+        uploaderId: number;
+        /** 上传时间戳 */
+        uploadTime: number;
+        /** 最近更改时间戳 */
+        lastModifyTime: number;
         /** 文件下载链接 */
         url: string;
     }
@@ -842,8 +860,6 @@ export interface FileOverview {
 export interface GroupConfig {
     /** 群名 */
     name: string;
-    /** 群公告 */
-    announcement: string;
     /** 是否开启坦白说 */
     confessTalk: boolean;
     /** 是否允许群员邀请 */
@@ -992,3 +1008,6 @@ export interface UploadVoiceResponse {
 
 /** 文件上传响应 */
 export type UploadFileResponse = FileInfoResponse;
+
+/** mirai-api-http 版本号 */
+export const MIRAI_API_HTTP_VERSION = '2.3.0';

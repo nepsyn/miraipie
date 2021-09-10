@@ -64,9 +64,11 @@ export abstract class Chat {
      * @return 下一条消息的消息链
      * @example
      * async function kick(chat: Chat, someone: number) {
+     *     await chat.send('真的要移出成员吗？');
      *     const next = await chat.nextMessage();
      *     const confirmString = next.selected('Plain').toDisplayString();
      *     if (confirmString === '是') {
+     *         // 移出成员...
      *         await chat.send('已移出成员');
      *     }
      * }
@@ -94,10 +96,12 @@ export abstract class Chat {
     isFriendChat(): this is FriendChat {
         return this.type === 'FriendChat';
     }
+
     /** 判断是否为群聊聊天窗口 */
     isGroupChat(): this is GroupChat {
         return this.type === 'GroupChat';
     }
+
     /** 判断是否为临时聊天窗口 */
     isTempChat(): this is TempChat {
         return this.type === 'TempChat';
@@ -203,6 +207,28 @@ export class GroupChat extends Chat {
         });
     }
 
+    /**
+     * 等待下一条群消息, 无论发送人是谁
+     * @since 1.1.14
+     * @param timeout 超时时间, 单位毫秒, 默认为0(不超时)
+     */
+    async nextGroupMessage(timeout?: number): Promise<MessageChain> {
+        return new Promise((resolve, reject) => {
+            let flag = true;
+            MiraiPieApplication.instance.once('GroupMessage', (chatMessage) => {
+                if (this.contact.id === (chatMessage.sender as GroupMember).group.id) {
+                    flag = false;
+                    resolve(MessageChain.from(chatMessage.messageChain));
+                }
+            });
+            if (timeout > 0) {
+                setTimeout(() => {
+                    if (flag) reject(new Error('等待消息已超时'));
+                }, timeout);
+            }
+        });
+    }
+
     async sendNudge(targetId: number): Promise<boolean> {
         const resp = await MiraiPieApplication.instance.api.sendNudge(targetId, this.contact.id, 'Group');
         return resp?.code === ResponseCode.Success;
@@ -218,59 +244,65 @@ export class GroupChat extends Chat {
     }
 
     /**
-     * 获取聊天对象的个人资料
+     * 获取成员的个人资料
+     * @param memberId 成员QQ号(默认为当前消息发送人)
      * @return 聊天对象的个人资料
      */
-    async getProfile(): Promise<Profile> {
-        const resp = await MiraiPieApplication.instance.api.getMemberProfile(this.sender.id, this.contact.id);
+    async getProfile(memberId?: number): Promise<Profile> {
+        const resp = await MiraiPieApplication.instance.api.getMemberProfile(memberId || this.sender.id, this.contact.id);
         return resp?.data;
     }
 
     /**
-     * 获取发送人信息
-     * @return 发送人信息
+     * 获取成员信息
+     * @param memberId 成员QQ号(默认为当前消息发送人)
+     * @return 成员信息
      */
-    async getInfo(): Promise<GroupMember> {
-        const resp = await MiraiPieApplication.instance.api.getMemberInfo(this.sender.id, this.contact.id);
+    async getInfo(memberId?: number): Promise<GroupMember> {
+        const resp = await MiraiPieApplication.instance.api.getMemberInfo(memberId || this.sender.id, this.contact.id);
         return resp?.data;
     }
 
     /**
-     * 修改发送人信息
-     * @param info 发送人信息
+     * 修改成员信息
+     * @param info 成员信息
+     * @param memberId 成员QQ号(默认为当前消息发送人)
      * @return 是否修改成功
      */
-    async setInfo(info: GroupMember): Promise<boolean> {
-        const resp = await MiraiPieApplication.instance.api.setMemberInfo(this.sender.id, this.contact.id, info);
+    async setInfo(info: GroupMember, memberId?: number): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.setMemberInfo(memberId || this.sender.id, this.contact.id, info);
         return resp?.code === ResponseCode.Success;
     }
 
     /**
-     * 禁言发送人
+     * 禁言成员
      * @param time 禁言时长(秒)
+     * @param memberId 成员QQ号(默认为当前消息发送人)
      * @return 是否禁言成功
      */
-    async mute(time: number = 60): Promise<boolean> {
-        const resp = await MiraiPieApplication.instance.api.muteMember(this.sender.id, this.contact.id, time);
+    async mute(time: number = 60, memberId?: number): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.muteMember(memberId || this.sender.id, this.contact.id, time);
         return resp?.code === ResponseCode.Success;
     }
 
     /**
-     * 取消禁言发送人
+     * 取消禁言成员
+     * @param memberId 成员QQ号(默认为当前消息发送人)
      * @return 是否取消成功
      */
-    async unmute(): Promise<boolean> {
-        const resp = await MiraiPieApplication.instance.api.unmuteMember(this.sender.id, this.contact.id);
+    async unmute(memberId?: number): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.unmuteMember(memberId || this.sender.id, this.contact.id);
         return resp?.code === ResponseCode.Success;
     }
 
     /**
-     * 踢出发送人
+     * 踢出成员
      * @param message 留言
+     * @param memberId 成员QQ号(默认为当前消息发送人)
      * @return 是否踢出成功
      */
-    async kick(message: string = ''): Promise<boolean> {
-        const resp = await MiraiPieApplication.instance.api.kickMember(this.sender.id, this.contact.id, message);
+    async kick(message: string = '', memberId?: number): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.kickMember(memberId || this.sender.id, this.contact.id, message);
         return resp?.code === ResponseCode.Success;
     }
 
@@ -331,68 +363,89 @@ export class GroupChat extends Chat {
     }
 
     /**
+     * 设置或取消管理员
+     * @since 1.1.14
+     * @param admin 是否为管理员
+     * @param memberId 成员QQ号(默认为当前消息发送人)
+     * @return 是否操作成功
+     */
+    async setAdmin(admin: boolean = true, memberId?: number): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.setMemberAdmin(memberId || this.sender.id, this.contact.id, admin);
+        return resp?.code === ResponseCode.Success;
+    }
+
+    /**
      * 获取群文件列表
-     * @param path 文件夹路径
+     * @param directoryPathOrId 文件夹路径或id
      * @param offset 分页偏移
      * @param size 分页大小
      * @return 文件列表
      */
-    async getFileList(path: string = '', offset: number = 0, size: number = 100): Promise<FileOverview[]> {
-        const resp = await MiraiPieApplication.instance.api.getGroupFileList(path, this.contact.id, offset, size);
+    async getFileList(directoryPathOrId: string = '', offset: number = 0, size: number = 100): Promise<FileOverview[]> {
+        const resp = await MiraiPieApplication.instance.api.getFileList(directoryPathOrId, directoryPathOrId, this.contact.id, null, offset, size, true);
         return resp?.data;
     }
 
     /**
      * 获取文件详情
-     * @param fileId 文件id
+     * @param pathOrId 文件路径或id
      * @return 文件概览
      */
-    async getFileInfo(fileId: string): Promise<FileOverview> {
-        const resp = await MiraiPieApplication.instance.api.getGroupFileInfo(fileId, this.contact.id);
+    async getFileInfo(pathOrId: string): Promise<FileOverview> {
+        const resp = await MiraiPieApplication.instance.api.getFileInfo(pathOrId, pathOrId, this.contact.id, null, true);
         return resp?.data;
     }
 
     /**
      * 创建群文件夹
      * @param directoryName 文件夹名称
-     * @param parentFileId 父文件夹id
+     * @param parentDirectoryPathOrId 父文件夹路径或id
      * @return 文件夹概览
      */
-    async createDirectory(directoryName: string, parentFileId: string = ''): Promise<FileOverview> {
-        const resp = await MiraiPieApplication.instance.api.createGroupFileDirectory(parentFileId, directoryName, this.contact.id);
+    async createDirectory(directoryName: string, parentDirectoryPathOrId: string = ''): Promise<FileOverview> {
+        const resp = await MiraiPieApplication.instance.api.createFileDirectory(parentDirectoryPathOrId, parentDirectoryPathOrId, directoryName, this.contact.id, null);
         return resp?.data;
     }
 
     /**
      * 删除群文件
-     * @param fileId 文件id
+     * @param pathOrId 文件路径或id
      * @return 是否删除成功
      */
-    async deleteFile(fileId: string): Promise<boolean> {
-        const resp = await MiraiPieApplication.instance.api.deleteGroupFile(fileId, this.contact.id);
+    async deleteFile(pathOrId: string): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.deleteFile(pathOrId, pathOrId, this.contact.id, null);
         return resp?.code === ResponseCode.Success;
     }
 
     /**
      * 移动群文件
-     * @param fileId 文件id
-     * @param moveToDirectoryId 移动到文件夹id
+     * @param pathOrId 文件路径或id
+     * @param moveToDirectoryPathOrId 移动到文件夹路径或id
      * @return 是否移动成功
      */
-    async moveFile(fileId: string, moveToDirectoryId: string = ''): Promise<boolean> {
-        const resp = await MiraiPieApplication.instance.api.moveGroupFile(fileId, this.contact.id, moveToDirectoryId);
+    async moveFile(pathOrId: string, moveToDirectoryPathOrId: string = null): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.moveFile(pathOrId, pathOrId, this.contact.id, null, moveToDirectoryPathOrId, moveToDirectoryPathOrId);
         return resp?.code === ResponseCode.Success;
     }
 
     /**
      * 重命名群文件
-     * @param fileId 文件id
+     * @param pathOrId 文件路径或id
      * @param name 文件名
      * @return 是否重命名成功
      */
-    async renameFile(fileId: string, name: string): Promise<boolean> {
-        const resp = await MiraiPieApplication.instance.api.moveGroupFile(fileId, this.contact.id, name);
+    async renameFile(pathOrId: string, name: string): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.renameFile(pathOrId, pathOrId, this.contact.id, null, name);
         return resp?.code === ResponseCode.Success;
+    }
+
+    /**
+     * 打开私聊窗口
+     * @since 1.1.14
+     * @return 当前消息发送人的私聊窗口
+     */
+    openTempChat(): TempChat {
+        return new TempChat(this.sender);
     }
 }
 

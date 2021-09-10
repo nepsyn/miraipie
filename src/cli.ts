@@ -1,4 +1,4 @@
-import {execSync} from 'child_process';
+import {exec, execSync} from 'child_process';
 import {program} from 'commander';
 import {prompt} from 'enquirer';
 import EventEmitter from 'events';
@@ -51,6 +51,22 @@ function MiraiPieApplicationMock() {
         uninstallPie: () => undefined,
         listen: () => undefined,
         stop: () => undefined
+    });
+}
+
+// 检查 miraipie 更新
+function checkForUpdate() {
+    const version = require('../package.json').version;
+    exec('npm search miraipie -p --no-description', (error, stdout) => {
+        if (!error && stdout) {
+            const lines = stdout.split('\n');
+            for (const line of lines) {
+                const desc = line.split('\t');
+                if (desc[0] === 'miraipie' && version < desc[3]) {
+                    logger.warn(`新的 miraipie 版本可用: ${desc[3]}, 当前版本: ${version}, 使用命令 npm install miraipie -g 更新 miraipie`);
+                }
+            }
+        }
     });
 }
 
@@ -147,6 +163,7 @@ program
     .option('-l, --log-level <level>', 'miraipie日志输出级别')
     .option('-v, --verbose', '控制台打印miraipie接收到的消息和事件')
     .action((opts) => {
+        checkForUpdate();
         useConfigFile(program.opts().config).then(async (config) => {
             if (opts.logLevel) config.logLevel = opts.logLevel;
             if (opts.modules) config.extensions = [...config.extensions, ...opts.modules];

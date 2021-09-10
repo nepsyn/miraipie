@@ -74,7 +74,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param messageChain 消息链或消息数组
      * @param quoteMessageId 引用回复的消息id
      */
-    sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId?: number): Promise<SendMessageResponse>;
+    sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId: number): Promise<SendMessageResponse>;
 
     /**
      * 发送群消息
@@ -82,7 +82,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param messageChain 消息链或消息数组
      * @param quoteMessageId 引用回复的消息id
      */
-    sendGroupMessage(groupId: number, messageChain: SingleMessage[], quoteMessageId?: number): Promise<SendMessageResponse>;
+    sendGroupMessage(groupId: number, messageChain: SingleMessage[], quoteMessageId: number): Promise<SendMessageResponse>;
 
     /**
      * 发送群临时会话消息
@@ -91,7 +91,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param messageChain 消息链或消息数组
      * @param quoteMessageId 引用回复的消息id
      */
-    sendTempMessage(memberId: number, groupId: number, messageChain: SingleMessage[], quoteMessageId?: number): Promise<SendMessageResponse>;
+    sendTempMessage(memberId: number, groupId: number, messageChain: SingleMessage[], quoteMessageId: number): Promise<SendMessageResponse>;
 
     /**
      * 发送头像戳一戳消息
@@ -189,6 +189,15 @@ type MiraiApiHttpAdapterMethodOptions = {
     setMemberInfo(memberId: number, groupId: number, info: GroupMember): Promise<ApiResponse>;
 
     /**
+     * 设置管理员(机器人需要有群主权限)
+     * @param memberId 群成员QQ号
+     * @param groupId 群号
+     * @param admin 是否设置为管理员
+     * @since mirai-api-http v2.3.0
+     */
+    setMemberAdmin(memberId: number, groupId: number, admin: boolean): Promise<ApiResponse>;
+
+    /**
      * 处理添加好友申请事件
      * @param eventId 事件id
      * @param fromId 申请人QQ号
@@ -219,53 +228,66 @@ type MiraiApiHttpAdapterMethodOptions = {
     handleBotInvitedJoinGroupRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string): Promise<ApiResponse>;
 
     /**
-     * 查看群文件列表
-     * @param parentFileId 文件夹id, 空串为根目录
+     * 查看聊天文件列表
+     * @param directoryId 文件夹id, 空串为根文件夹
+     * @param directoryPath 文件夹路径
      * @param groupId 群号
+     * @param friendId 好友QQ号
      * @param offset 分页偏移
      * @param size 分页大小
      * @param withDownloadInfo 是否携带下载信息, 额外请求, 无必要不要携带
      */
-    getGroupFileList(parentFileId: string, groupId: number, offset?: number, size?: number, withDownloadInfo?: boolean): Promise<FileListResponse>;
+    getFileList(directoryId: string, directoryPath: string, groupId: number, friendId: number, offset: number, size: number, withDownloadInfo: boolean): Promise<FileListResponse>;
 
     /**
-     * 获取群文件信息
+     * 获取聊天文件信息
      * @param fileId 文件id
+     * @param path 文件路径
      * @param groupId 群号
+     * @param friendId 好友QQ号
      * @param withDownloadInfo 是否携带下载信息, 额外请求, 无必要不要携带
      */
-    getGroupFileInfo(fileId: string, groupId: number, withDownloadInfo?: boolean): Promise<FileInfoResponse>;
+    getFileInfo(fileId: string, path: string, groupId: number, friendId: number, withDownloadInfo: boolean): Promise<FileInfoResponse>;
 
     /**
-     * 创建群文件夹
-     * @param parentFileId 父目录id, 空串为根目录
+     * 创建聊天文件夹
+     * @param parentDirectoryId 父文件夹id, 空串为根文件夹
+     * @param parentDirectoryPath 父文件夹路径
      * @param directoryName 文件夹名
      * @param groupId 群号
+     * @param friendId 好友QQ号
      */
-    createGroupFileDirectory(parentFileId: string, directoryName: string, groupId: number): Promise<FileInfoResponse>;
+    createFileDirectory(parentDirectoryId: string, parentDirectoryPath: string, directoryName: string, groupId: number, friendId: number): Promise<FileInfoResponse>;
 
     /**
-     * 删除群文件
-     * @param fileId 文件id
+     * 删除聊天文件
+     * @param id 文件或文件夹id
+     * @param path 文件或文件夹路径
      * @param groupId 群号
+     * @param friendId 好友QQ号
      */
-    deleteGroupFile(fileId: string, groupId: number): Promise<ApiResponse>;
+    deleteFile(id: string, path: string, groupId: number, friendId: number): Promise<ApiResponse>;
 
     /**
-     * 移动群文件
-     * @param fileId 文件id
+     * 移动聊天文件
+     * @param id 文件或文件夹id
+     * @param path 文件或文件夹路径
      * @param groupId 群号
-     * @param moveToDirectoryId 移动到文件夹id, 空串为根目录
+     * @param friendId 好友QQ号
+     * @param moveToDirectoryId 移动到文件夹id, 空串为根文件夹
+     * @param moveToDirectoryPath 移动到文件夹路径, 空串为根文件夹
      */
-    moveGroupFile(fileId: string, groupId: number, moveToDirectoryId: string): Promise<ApiResponse>;
+    moveFile(id: string, path: string, groupId: number, friendId: number, moveToDirectoryId: string, moveToDirectoryPath: string): Promise<ApiResponse>;
 
     /**
-     * 重命名群文件
-     * @param fileId 文件id
+     * 重命名聊天文件
+     * @param id 文件或文件夹id
+     * @param path 文件或文件夹路径
      * @param groupId 群号
+     * @param friendId 好友QQ号
      * @param name 文件名
      */
-    renameGroupFile(fileId: string, groupId: number, name: string): Promise<ApiResponse>;
+    renameFile(id: string, path: string, groupId: number, friendId: number, name: string): Promise<ApiResponse>;
 
     /** 会话认证 */
     verify?(): Promise<VerifyResponse>;
@@ -307,7 +329,7 @@ type MiraiApiHttpAdapterMethodOptions = {
 
     /**
      * 语音文件上传
-     * @param uploadType 上传类型(仅支持"group")
+     * @param uploadType 上传类型("friend" 或 "group" 或 "temp")
      * @param voiceData 文件内容
      */
     uploadVoice(uploadType: UploadType, voiceData: ReadStream): Promise<UploadVoiceResponse>;
@@ -315,10 +337,11 @@ type MiraiApiHttpAdapterMethodOptions = {
     /**
      * 群文件上传
      * @param uploadType 上传类型(仅支持"group")
-     * @param path 上传目录的id, 空串为上传到根目录
+     * @param path 上传父文件夹的id, 空串为上传到根文件夹
      * @param fileData 文件内容
+     * @param filename 文件名
      */
-    uploadGroupFile(uploadType: UploadType, path: string, fileData: ReadStream): Promise<UploadFileResponse>;
+    uploadGroupFile(uploadType: UploadType, path: string, fileData: ReadStream, filename: string): Promise<UploadFileResponse>;
 
     /** 开启消息和事件监听 */
     listen(): Promise<any>;

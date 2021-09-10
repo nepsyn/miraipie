@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.14
+
+- 适配 mirai-api-http v2.3.0。
+- 优化 `Chat` 模块的部分方法。
+- 添加 CLI启动应用程序时检查当前 miraipie 版本。
+
 ## v1.1.13
 
 - 修复 `MessageChain` 构造问题。

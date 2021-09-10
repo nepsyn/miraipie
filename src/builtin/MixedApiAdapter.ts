@@ -9,6 +9,7 @@ import {
     Event,
     GroupConfig,
     GroupMember,
+    MIRAI_API_HTTP_VERSION,
     NudgeKind,
     ResponseCode,
     SingleMessage
@@ -21,7 +22,7 @@ type UploadType = 'friend' | 'group' | 'temp';
  */
 const MixedApiAdapter = makeApiAdapter({
     id: 'mixed',
-    supportVersion: '2.2.0',
+    supportVersion: MIRAI_API_HTTP_VERSION,
     configMeta: {
         qq: {
             type: Number,
@@ -136,11 +137,11 @@ const MixedApiAdapter = makeApiAdapter({
                             this.logger.info('已启动监听');
                         } else {
                             this.logger.error(`监听器启动失败, 错误原因: ${data.msg}`);
+                            this.ws.close();
                         }
+                    } else {
+                        this.queue.set(parseInt(message.syncId), message.data as ApiResponse);
                     }
-                } else if ('code' in message) {
-                    this.logger.error(`监听失败, 错误原因: ${(message as any).msg}`);
-                    this.ws.close();
                 } else {
                     this.logger.warn('未能解析的数据:', message);
                 }
@@ -207,23 +208,44 @@ const MixedApiAdapter = makeApiAdapter({
     async recall(messageId: number) {
         return this.post('recall', {target: messageId});
     },
-    async getGroupFileList(parentFileId: string, groupId: number, offset: number = 0, size: number = 100, withDownloadInfo: boolean = false) {
-        return this.get('/file/list', {id: parentFileId, group: groupId, offset, size, withDownloadInfo});
+    async getFileList(directoryId: string, directoryPath: string, groupId: number, friendId: number, offset: number = 1, size: number = 100, withDownloadInfo: boolean = true) {
+        return this.get('file/list', {
+            id: directoryId,
+            path: directoryPath,
+            group: groupId,
+            qq: friendId,
+            offset,
+            size,
+            withDownloadInfo
+        });
     },
-    async getGroupFileInfo(fileId: string, groupId: number, withDownloadInfo: boolean = false) {
-        return this.get('file/info', {id: fileId, group: groupId, withDownloadInfo});
+    async getFileInfo(fileId: string, path: string, groupId: number, friendId: number, withDownloadInfo: boolean = true) {
+        return this.get('file/info', {id: fileId, path: path, group: groupId, qq: friendId, withDownloadInfo});
     },
-    async createGroupFileDirectory(parentFileId: string, directoryName: string, groupId: number) {
-        return this.post('file/mkdir', {id: parentFileId, group: groupId, directoryName});
+    async createFileDirectory(parentDirectoryId: string, parentDirectoryPath: string, directoryName: string, groupId: number, friendId: number) {
+        return this.post('file/mkdir', {
+            id: parentDirectoryId,
+            path: parentDirectoryPath,
+            group: groupId,
+            qq: friendId,
+            directoryName
+        });
     },
-    async deleteGroupFile(fileId: string, groupId: number) {
-        return this.post('file/delete', {id: fileId, group: groupId});
+    async deleteFile(id: string, path: string, groupId: number, friendId: number) {
+        return this.post('file/delete', {id, path, group: groupId, qq: friendId});
     },
-    async moveGroupFile(fileId: string, groupId: number, moveToDirectoryId: string) {
-        return this.post('file/move', {id: fileId, group: groupId, moveTo: moveToDirectoryId});
+    async moveFile(id: string, path: string, groupId: number, friendId: number, moveToDirectoryId: string, moveToDirectoryPath: string) {
+        return this.post('file/move', {
+            id,
+            path,
+            group: groupId,
+            qq: friendId,
+            moveTo: moveToDirectoryId,
+            moveToPath: moveToDirectoryPath
+        });
     },
-    async renameGroupFile(fileId: string, groupId: number, name: string) {
-        return this.post('file/rename', {id: fileId, group: groupId, renameTo: name});
+    async renameFile(id: string, path: string, groupId: number, friendId: number, name: string) {
+        return this.post('file/rename', {id, path, group: groupId, qq: friendId, renameTo: name});
     },
     async deleteFriend(friendId: number) {
         return this.post('deleteFriend', {target: friendId});
@@ -260,6 +282,9 @@ const MixedApiAdapter = makeApiAdapter({
     },
     async setMemberInfo(memberId: number, groupId: number, info: GroupMember) {
         return this.post('memberInfo', {target: groupId, memberId, info});
+    },
+    async setMemberAdmin(memberId: number, groupId: number, admin: boolean = true) {
+        return this.post('memberAdmin', {target: groupId, memberId, assign: admin});
     },
     async handleNewFriendRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string) {
         return this.post('resp/newFriendRequestEvent', {eventId, fromId, groupId, operate, message});

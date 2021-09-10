@@ -6,6 +6,7 @@ import {
     Event,
     GroupConfig,
     GroupMember,
+    MIRAI_API_HTTP_VERSION,
     NudgeKind,
     ResponseCode,
     SingleMessage
@@ -26,7 +27,7 @@ function* generateSyncId(): Generator<number> {
  */
 const WebsocketApiAdapter = makeApiAdapter({
     id: 'ws',
-    supportVersion: '2.2.0',
+    supportVersion: MIRAI_API_HTTP_VERSION,
     configMeta: {
         qq: {
             type: Number,
@@ -52,7 +53,7 @@ const WebsocketApiAdapter = makeApiAdapter({
         timeout: {
             type: Number,
             description: '发送请求的超时时间(毫秒)',
-            default: () => 2000
+            default: () => 10000
         }
     },
     data: {
@@ -119,13 +120,11 @@ const WebsocketApiAdapter = makeApiAdapter({
                             this.logger.info('已启动监听');
                         } else {
                             this.logger.error(`监听器启动失败, 错误原因: ${data.msg}`);
+                            this.ws.close();
                         }
                     } else {
                         this.queue.set(parseInt(message.syncId), message.data as ApiResponse);
                     }
-                } else if ('code' in message) {
-                    this.logger.error(`监听失败, 错误原因: ${(message as any).msg}`);
-                    this.ws.close();
                 } else {
                     this.logger.warn('未能解析的数据:', message);
                 }
@@ -184,23 +183,50 @@ const WebsocketApiAdapter = makeApiAdapter({
     async recall(messageId: number) {
         return await this.request('recall', {target: messageId});
     },
-    async getGroupFileList(parentFileId: string, groupId: number, offset: number = 0, size: number = 100, withDownloadInfo: boolean = false) {
-        return await this.request('file_list', {id: parentFileId, target: groupId, offset, size, withDownloadInfo});
+    async getFileList(directoryId: string, directoryPath: string, groupId: number, friendId: number, offset: number = 1, size: number = 100, withDownloadInfo: boolean = true) {
+        return await this.request('file_list', {
+            id: directoryId,
+            path: directoryPath,
+            group: groupId,
+            qq: friendId,
+            offset,
+            size,
+            withDownloadInfo
+        });
     },
-    async getGroupFileInfo(fileId: string, groupId: number, withDownloadInfo: boolean = false) {
-        return await this.request('file_info', {id: fileId, target: groupId, withDownloadInfo});
+    async getFileInfo(fileId: string, path: string, groupId: number, friendId: number, withDownloadInfo: boolean = true) {
+        return await this.request('file_info', {
+            id: fileId,
+            path: path,
+            group: groupId,
+            qq: friendId,
+            withDownloadInfo
+        });
     },
-    async createGroupFileDirectory(parentFileId: string, directoryName: string, groupId: number) {
-        return await this.request('file_mkdir', {id: parentFileId, target: groupId, directoryName});
+    async createFileDirectory(parentDirectoryId: string, parentDirectoryPath: string, directoryName: string, groupId: number, friendId: number) {
+        return await this.request('file_mkdir', {
+            id: parentDirectoryId,
+            path: parentDirectoryPath,
+            group: groupId,
+            qq: friendId,
+            directoryName
+        });
     },
-    async deleteGroupFile(fileId: string, groupId: number) {
-        return await this.request('file_delete', {id: fileId, target: groupId});
+    async deleteFile(id: string, path: string, groupId: number, friendId: number) {
+        return await this.request('file_delete', {id, path, group: groupId, qq: friendId});
     },
-    async moveGroupFile(fileId: string, groupId: number, moveToDirectoryId: string) {
-        return await this.request('file_move', {id: fileId, target: groupId, moveTo: moveToDirectoryId});
+    async moveFile(id: string, path: string, groupId: number, friendId: number, moveToDirectoryId: string, moveToDirectoryPath: string) {
+        return await this.request('file_move', {
+            id,
+            path,
+            group: groupId,
+            qq: friendId,
+            moveTo: moveToDirectoryId,
+            moveToPath: moveToDirectoryPath
+        });
     },
-    async renameGroupFile(fileId: string, groupId: number, name: string) {
-        return await this.request('file_rename', {id: fileId, target: groupId, renameTo: name});
+    async renameFile(id: string, path: string, groupId: number, friendId: number, name: string) {
+        return await this.request('file_rename', {id, path, group: groupId, qq: friendId, renameTo: name});
     },
     async deleteFriend(friendId: number) {
         return await this.request('deleteFriend', {target: friendId});
@@ -237,6 +263,9 @@ const WebsocketApiAdapter = makeApiAdapter({
     },
     async setMemberInfo(memberId: number, groupId: number, info: GroupMember) {
         return await this.request('memberInfo', {target: groupId, memberId, info}, 'update');
+    },
+    async setMemberAdmin(memberId: number, groupId: number, admin: boolean = true) {
+        return await this.request('memberAdmin', {target: groupId, memberId, assign: admin});
     },
     async handleNewFriendRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string) {
         return await this.request('resp_newFriendRequestEvent', {eventId, fromId, groupId, operate, message});

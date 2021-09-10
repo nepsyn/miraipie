@@ -310,7 +310,7 @@ export function Image(imageId?: string, url?: string, path?: string, base64?: st
     };
 }
 
-type ImageOptions = Partial<Omit<Mirai.Image, 'type' | 'toDisplayString' | 'toMiraiCode'>>;
+type ImageOptions = Partial<Omit<Mirai.Image, 'type' | 'isType' | 'toDisplayString' | 'toMiraiCode'>>;
 
 /**
  * 通过对象构造图片消息
@@ -341,7 +341,7 @@ export function FlashImage(imageId?: string, url?: string, path?: string, base64
     };
 }
 
-type FlashImageOptions = Partial<Omit<Mirai.FlashImage, 'type' | 'toDisplayString' | 'toMiraiCode'>>;
+type FlashImageOptions = Partial<Omit<Mirai.FlashImage, 'type' | 'isType' | 'toDisplayString' | 'toMiraiCode'>>;
 
 /**
  * 通过对象构造闪图消息
@@ -367,12 +367,12 @@ export function makeFlashImage(options: FlashImageOptions): Mirai.FlashImage {
 export function Voice(voiceId?: string, url?: string, path?: string, base64?: string): Mirai.Voice {
     return {
         type: 'Voice',
-        voiceId, url, path, base64,
+        voiceId, path, base64,
         isType, toDisplayString, toMiraiCode
     };
 }
 
-type VoiceOptions = Partial<Omit<Mirai.Voice, 'type' | 'toDisplayString' | 'toMiraiCode'>>;
+type VoiceOptions = Partial<Omit<Mirai.Voice, 'type' | 'isType' | 'toDisplayString' | 'toMiraiCode'>>;
 
 /**
  * 通过对象构造语音消息
@@ -382,7 +382,6 @@ export function makeVoice(options: VoiceOptions): Mirai.Voice {
     return {
         type: 'Voice',
         voiceId: options.voiceId,
-        url: options.url,
         ...options,
         isType, toDisplayString, toMiraiCode
     }
@@ -492,11 +491,11 @@ export function makeMusicShare(options: MusicShareOptions): Mirai.MusicShare {
  * @param time 发送时间戳
  * @param senderName 发送人名称
  * @param messageChain 消息链
- * @param sourceId 消息id
+ * @param messageId 消息id
  */
-export function ForwardNode(senderId: number, time: number, senderName: number, messageChain: MessageChain, sourceId: number): Mirai.ForwardNode {
+export function ForwardNode(senderId: number, time: number, senderName: number, messageChain: MessageChain, messageId: number): Mirai.ForwardNode {
     return {
-        senderId, time, senderName, messageChain, sourceId
+        senderId, time, senderName, messageChain, messageId
     };
 }
 
