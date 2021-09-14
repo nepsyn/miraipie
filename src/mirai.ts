@@ -223,14 +223,11 @@ export interface Poke extends SingleMessage {
     name: PokeType;
 }
 
-/** 骰子数值类型 */
-export type DiceValue = 1 | 2 | 3 | 4 | 5 | 6;
-
 /** 骰子型 */
 export interface Dice extends SingleMessage {
     type: 'Dice';
     /** 骰子数值 */
-    value: DiceValue;
+    value: number;
 }
 
 /** 音乐分享型 */
@@ -1009,5 +1006,5 @@ export interface UploadVoiceResponse {
 /** 文件上传响应 */
 export type UploadFileResponse = FileInfoResponse;
 
-/** mirai-api-http 版本号 */
-export const MIRAI_API_HTTP_VERSION = '2.3.0';
+/** 支持的 mirai-api-http 版本号 */
+export const MIRAI_API_HTTP_VERSION = '2.3.1';

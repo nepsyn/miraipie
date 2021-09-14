@@ -1,5 +1,5 @@
 import * as Mirai from './mirai';
-import {DiceValue, PokeType, SingleMessage, SingleMessageType} from './mirai';
+import {PokeType, SingleMessage, SingleMessageType} from './mirai';
 
 /**
  * 判断单一消息类型(typescript类型保护)
@@ -439,7 +439,7 @@ export function Poke(name: PokeType): Mirai.Poke {
  * 构造骰子消息
  * @param value 骰子数值(1~6)
  */
-export function Dice(value: DiceValue): Mirai.Dice {
+export function Dice(value: number): Mirai.Dice {
     return {
         type: 'Dice',
         value,

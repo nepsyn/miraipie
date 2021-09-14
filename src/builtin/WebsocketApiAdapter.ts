@@ -79,7 +79,7 @@ const WebsocketApiAdapter = makeApiAdapter({
             // 构造请求对象
             const data = {syncId, command, subCommand, content};
             this.ws.send(JSON.stringify(data), (err) => {
-                if (err) this.logger.error('发送请求错误, 请求原始数据:', data, err.message);
+                if (err) this.logger.error(`发送请求错误, 请求命令字: ${command}, 请求原始数据:`, data, err.message);
             });
 
             // 等待响应
@@ -92,6 +92,9 @@ const WebsocketApiAdapter = makeApiAdapter({
             const resp = this.queue.get(syncId);
             if (resp) {
                 this.queue.delete(syncId);
+                if ('code' in resp && resp['code'] !== ResponseCode.Success) {
+                    this.logger.warn(`发送的请求未能达到预期的效果, 请求命令字: ${command}, 错误原因: ${(resp as any).msg}, 请求原始数据:`, data);
+                }
                 return resp as T;
             } else {
                 this.logger.error('发送的请求已超时, 请求原始数据:', data);

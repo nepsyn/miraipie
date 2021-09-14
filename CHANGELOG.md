@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.15
+
+- 适配 mirai-api-http v2.3.1。
+- 添加 `Chat` 模块新增 `findGroup` 和 `findFriend` 方法用于构造聊天窗口。
+- 优化 内置 adapter 错误提示。
+
 ## v1.1.14
 
 - 适配 mirai-api-http v2.3.0。

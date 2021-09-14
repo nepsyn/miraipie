@@ -77,7 +77,7 @@ const MixedApiAdapter = makeApiAdapter({
             try {
                 const resp = (await axios.request<T>(config)).data;
                 if ('code' in resp && resp['code'] !== ResponseCode.Success) {
-                    this.logger.warn(`发送的请求未能达到预期的效果, 错误原因: ${(resp as any).msg}, 请求原始数据:`, data);
+                    this.logger.warn(`发送的请求未能达到预期的效果, 请求uri: ${uri}, 错误原因: ${(resp as any).msg}, 请求原始数据:`, data);
                 }
                 return resp;
             } catch (err) {

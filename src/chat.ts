@@ -106,6 +106,40 @@ export abstract class Chat {
     isTempChat(): this is TempChat {
         return this.type === 'TempChat';
     }
+
+    /**
+     * 打开指定好友的聊天窗, 没有找到时返回null
+     * @param friendId 好友QQ号
+     * @since 1.1.15
+     * @example
+     * const chat = await Chat.findFriend(10000000);
+     * await chat.send('Hello World!');
+     */
+    static async findFriend(friendId: number): Promise<FriendChat> {
+        const resp = await MiraiPieApplication.instance.api.getFriendList();
+        for (const friend of resp.data) {
+            if (friend.id === friendId) return new FriendChat(friend);
+        }
+        return null;
+    }
+
+    /**
+     * 打开指定群聊的聊天窗, 没有找到时返回null, 该聊天窗会将群主作为聊天窗的消息发送人
+     * @param groupId 群号
+     * @since 1.1.15
+     * @example
+     * const chat = await Chat.findGroup(20000000);
+     * await chat.send('Hello World!');
+     */
+    static async findGroup(groupId: number): Promise<GroupChat> {
+        const resp = await MiraiPieApplication.instance.api.getMemberList(groupId);
+        if (resp.code === ResponseCode.Success) {
+            for (const member of resp.data) {
+                if (member.permission === 'OWNER') return new GroupChat(member);
+            }
+        }
+        return null;
+    }
 }
 
 /**
@@ -178,9 +212,12 @@ export class GroupChat extends Chat {
         this.contact = sender.group;
     }
 
-    /**
-     * 机器人在本群权限
-     */
+    /** 通过群聊对象构造群聊天窗口 */
+    static from() {
+
+    }
+
+    /** 机器人在本群权限 */
     get permission(): GroupPermission {
         return this.contact.permission;
     }

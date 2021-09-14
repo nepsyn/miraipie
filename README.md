@@ -80,11 +80,11 @@ TODO
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-## v1.1.14
+## v1.1.15
 
-- 适配 mirai-api-http v2.3.0。
-- 优化 `Chat` 模块的部分方法。
-- 添加 CLI启动应用程序时检查当前 miraipie 版本。
+- 适配 mirai-api-http v2.3.1。
+- 添加 `Chat` 模块新增 `findGroup` 和 `findFriend` 方法用于构造聊天窗口。
+- 优化 内置 adapter 错误提示。
 
 # 许可
 

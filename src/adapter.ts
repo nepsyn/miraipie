@@ -74,7 +74,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param messageChain 消息链或消息数组
      * @param quoteMessageId 引用回复的消息id
      */
-    sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId: number): Promise<SendMessageResponse>;
+    sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId?: number): Promise<SendMessageResponse>;
 
     /**
      * 发送群消息
@@ -82,7 +82,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param messageChain 消息链或消息数组
      * @param quoteMessageId 引用回复的消息id
      */
-    sendGroupMessage(groupId: number, messageChain: SingleMessage[], quoteMessageId: number): Promise<SendMessageResponse>;
+    sendGroupMessage(groupId: number, messageChain: SingleMessage[], quoteMessageId?: number): Promise<SendMessageResponse>;
 
     /**
      * 发送群临时会话消息
@@ -91,7 +91,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param messageChain 消息链或消息数组
      * @param quoteMessageId 引用回复的消息id
      */
-    sendTempMessage(memberId: number, groupId: number, messageChain: SingleMessage[], quoteMessageId: number): Promise<SendMessageResponse>;
+    sendTempMessage(memberId: number, groupId: number, messageChain: SingleMessage[], quoteMessageId?: number): Promise<SendMessageResponse>;
 
     /**
      * 发送头像戳一戳消息
