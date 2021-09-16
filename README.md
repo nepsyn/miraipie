@@ -1,6 +1,6 @@
 # miraipie
 
-一个基于 [mirai-api-http](https://github.com/project-mirai/mirai-api-http) 的 TypeScript/JavaScript 机器人开发工具包。
+一个基于 [mirai-api-http](https://github.com/project-mirai/mirai-api-http) 的 TypeScript/JavaScript QQ 机器人开发工具包。
 
 ## 开始使用
 
@@ -14,30 +14,45 @@
 
 ### 安装 `miraipie`
 
-通过 npm 安装：
+#### NPM
+
+对于 Node.js 开发者， 直接使用 NPM 安装 miraipie 作为项目依赖：
 
 ```shell
-> npm install miraipie -g
+npm i miraipie
 ```
 
-通过 git 安装：
+#### 命令行工具（CLI）
+
+miraipie 提供了一个开箱即用的命令行工具， 用于快速启动应用程序或生成插件模板等操作， 要使用 CLI 工具， 需要先全局安装 miraipie ：
 
 ```shell
-# 克隆本项目
-> git clone https://github.com/nepsyn/miraipie.git
-# 进入目标文件夹
-> cd miraipie
-# 安装项目依赖
-> npm install
-# 编译本项目
-> npm run build
-# 安装到全局
-> npm install . -g
+npm i -g miraipie
+```
+
+安装完成后即可直接使用 `miraipie` 命令：
+
+```shell
+miraipie --help
+```
+
+#### 自行构建
+
+NPM 安装的 miraipie 不一定是当前的最新版本， 如果需要即时使用 miraipie 的最新版本， 推荐自行构建：
+
+```shell
+# 克隆 miraipie 仓库
+git clone https://github.com/nepsyn/miraipie.git
+cd miraipie
+# 安装依赖项
+npm install
+# 运行构建
+npm run build
 ```
 
 ### 启动 `miraipie` 应用程序
 
-对于一般用户, 建议使用 `miraipie` 提供的 cli 工具直接启动应用程序：
+对于一般 NodeJs 用户, 建议使用 `miraipie` 提供的 cli 工具直接启动应用程序：
 
 ```shell
 # 查看命令帮助
@@ -47,44 +62,20 @@
 ```
 
 对于编程式的用户, 建议参阅 demo 文件夹中的 [start-miraipie.js](demo/start-miraipie.js) 文件查看基础用法。
+对于 web 开发的用户, 建议参阅 demo 文件夹中的 [start-miraipie.html](demo/start-miraipie.html) 文件查看基础用法。
 
-## 编写 pie( `miraipie` 中的独立插件)
+## 文档
 
-> 参阅 demo 文件夹中的 [repeater-pie.js](demo/repeater-pie.js) 文件查看最基础的 pie 结构。
-
-### 新建 pie 项目
-
-通过 cli 工具快速新建一个 pie 项目：
-
-```shell
-# 使用命令新建 pie 项目
-> miraipie pie create
-√ 请输入pie项目存放位置 · pies/repeater/
-[2021-08-11T23:21:13.295] [INFO] cli - 已使用模板创建pie项目
-```
-
-### 编写指南
-
-TODO
-
-### 引入 pie
-
-使用 cli 工具快速导入编写完成的 pie 模块：
-
-```shell
-# 使用命令导入 pie
-> miraipie install pies/repeater
-```
+访问 [miraipie 文档](https://nepsyn.github.io/miraipie/) 查看完整的 miraipie 文档。
 
 # 更新日志
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-## v1.1.15
+## v1.2.0
 
-- 适配 mirai-api-http v2.3.1。
-- 添加 `Chat` 模块新增 `findGroup` 和 `findFriend` 方法用于构造聊天窗口。
-- 优化 内置 adapter 错误提示。
+- 添加 对浏览器的支持, 可以用于 web 项目的开发。
+- 修复 `makePie` 和 `makeApiAdapter` 属性缺失问题。
 
 # 许可
 

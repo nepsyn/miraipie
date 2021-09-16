@@ -15,7 +15,7 @@
     "typescript": "^4.3.4"
   },
   "peerDependencies": {
-    "miraipie": "^1.1.15"
+    "miraipie": "^1.2.0"
   },
   "dependencies": {
   }

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>miraipie demo</title>
+</head>
+<body>
+<h2>打开浏览器控制台（F12）调试miraipie应用程序</h2>
+<script src="https://unpkg.com/miraipie@latest/dist/miraipie.bundle.js"></script>
+<script>
+    const app = MiraiPie.createApp(MiraiPie.makeAppConfig({
+        qq: 123456789,
+        adapterInUse: 'ws',
+        verbose: true,
+        adapters: {
+            ws: {
+                configs: {
+                    verifyKey: 'verify key',
+                    host: '127.0.0.1',
+                    port: 23333
+                }
+            }
+        }
+    }));
+    app.listen()
+</script>
+</body>
+</html>

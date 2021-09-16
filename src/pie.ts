@@ -315,10 +315,9 @@ export type Pie<C extends ConfigMeta = {}, D extends {} = {}, M extends MethodsO
  * @param options pie 选项
  */
 export function makePie<C extends ConfigMeta, D extends {}, M extends MethodsOption>(options: PieOptions<C, D, M>): Pie<C, D, M> {
-    const {data, methods, configMeta} = options;
     const pie = Object.assign(new EventEmitter(), {
-        ...(data || {}),
-        ...(methods || {}),
+        ...(options.data || {}),
+        ...(options.methods || {}),
         id: options.id,
         name: options.name,
         author: options.author,
@@ -326,8 +325,8 @@ export function makePie<C extends ConfigMeta, D extends {}, M extends MethodsOpt
         description: options.description || '',
         authorUrl: options.authorUrl || '',
         projectUrl: options.projectUrl || '',
-        configMeta: configMeta || {},
-        configs: makeConfigs(configMeta),
+        configMeta: options.configMeta || {},
+        configs: makeConfigs(options.configMeta),
         filters: options.filters || [],
         logger: getLogger(`pie:${options.id}`),
         __isPie: true

@@ -488,13 +488,13 @@ export type MiraiApiHttpAdapter<C extends ConfigMeta = {}, D extends {} = {}, M 
  * @param options adapter 选项
  */
 export function makeApiAdapter<C extends ConfigMeta, D extends {}, M extends MethodsOption>(options: MiraiApiHttpAdapterOption<C, D, M>): MiraiApiHttpAdapter<C, D, M> {
-    const {data, methods, configMeta, installed, uninstalled, used, unused, ...rest} = options;
+    const {data = {}, methods = {}, configMeta = {}, installed = undefined, uninstalled = undefined, used = undefined, unused = undefined, ...rest} = options;
 
     const adapter = Object.assign(new EventEmitter(), {
-        ...(data || {}),
-        ...(methods || {}),
+        ...data,
+        ...methods,
         ...rest,
-        configMeta: configMeta || {},
+        configMeta: configMeta,
         configs: makeConfigs(options.configMeta),
         listening: false,
         logger: getLogger(`adapter:${options.id}`),

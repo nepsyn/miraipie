@@ -124,7 +124,6 @@ export class MiraiPieApplication extends EventEmitter {
      * @param appConfigs 应用程序配置
      */
     static createApp(appConfigs: ApplicationConfig): MiraiPieApplication {
-        if (MiraiPieApplication.instance) return MiraiPieApplication.instance;
         return new MiraiPieApplication(appConfigs);
     }
 
@@ -419,6 +418,7 @@ export * from './message';
 export * from './chat';
 export * from './config';
 export const createApp = MiraiPieApplication.createApp;
+export const makeAppConfig = ApplicationConfig.make;
 export default createApp;
 
 // 当存在全局 miraipie 应用程序时, 使用全局模块

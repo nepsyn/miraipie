@@ -1,10 +1,15 @@
 # Changelog
 
+## v1.2.0
+
+- 添加 对浏览器的支持, 可以用于 web 项目的开发。
+- 修复 `makePie` 和 `makeApiAdapter` 属性缺失问题。
+
 ## v1.1.15
 
 - 适配 mirai-api-http v2.3.1。
 - 添加 `Chat` 模块新增 `findGroup` 和 `findFriend` 方法用于构造聊天窗口。
-- 优化 内置 adapter 错误提示。
+- 优化 内置 `adapter` 错误提示。
 
 ## v1.1.14
 
