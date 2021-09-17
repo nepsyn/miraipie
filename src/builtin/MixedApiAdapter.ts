@@ -45,6 +45,11 @@ const MixedApiAdapter = makeApiAdapter({
             description: 'mirai-api-http服务的端口号',
             default: () => 23333
         },
+        ssl: {
+            type: Boolean,
+            description: '是否使用SSL',
+            default: () => false
+        }
     },
     data: {
         session: null,
@@ -55,7 +60,7 @@ const MixedApiAdapter = makeApiAdapter({
             // 构造axios请求config
             const config: AxiosRequestConfig = {
                 method,
-                url: `http://${this.configs.host}:${this.configs.port}/${uri}`,
+                url: `http${this.configs.ssl ? 's' : ''}://${this.configs.host}:${this.configs.port}/${uri}`,
                 headers: {}
             };
 
@@ -118,7 +123,7 @@ const MixedApiAdapter = makeApiAdapter({
     async listen() {
         if (!this.listening) {
             const id = this.configs.qq;
-            this.ws = new WebSocket(`ws://${this.configs.host}:${this.configs.port}/all?verifyKey=${this.configs.verifyKey}&qq=${id}`);
+            this.ws = new WebSocket(`ws${this.configs.ssl ? 's' : ''}://${this.configs.host}:${this.configs.port}/all?verifyKey=${this.configs.verifyKey}&qq=${id}`);
             this.ws.on('error', (err) => {
                 this.logger.error(`监听器启动出错:`, err.message);
             });

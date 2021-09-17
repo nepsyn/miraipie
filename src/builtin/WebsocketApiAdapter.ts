@@ -54,6 +54,11 @@ const WebsocketApiAdapter = makeApiAdapter({
             type: Number,
             description: '发送请求的超时时间(毫秒)',
             default: () => 10000
+        },
+        ssl: {
+            type: Boolean,
+            description: '是否使用SSL',
+            default: () => false
         }
     },
     data: {
@@ -104,7 +109,7 @@ const WebsocketApiAdapter = makeApiAdapter({
     async listen() {
         if (!this.listening) {
             const id = this.configs.qq;
-            this.ws = new WebSocket(`ws://${this.configs.host}:${this.configs.port}/all?verifyKey=${this.configs.verifyKey}&qq=${id}`);
+            this.ws = new WebSocket(`ws${this.configs.ssl ? 's' : ''}://${this.configs.host}:${this.configs.port}/all?verifyKey=${this.configs.verifyKey}&qq=${id}`);
             this.ws.on('error', (err) => {
                 this.logger.error(`监听器启动出错:`, err.message);
             });

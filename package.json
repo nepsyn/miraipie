@@ -1,6 +1,6 @@
 {
   "name": "miraipie",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "the most powerful nodejs development kit for mirai-api-http",
   "main": "lib/miraipie.js",
   "browser": "dist/miraipie.bundle.js",

@@ -72,11 +72,6 @@ npm run build
 
 > 参见 [CHANGELOG.md](CHANGELOG.md) 查看完整的更新日志。
 
-## v1.2.0
-
-- 添加 对浏览器的支持, 可以用于 web 项目的开发。
-- 修复 `makePie` 和 `makeApiAdapter` 属性缺失问题。
-
 # 许可
 
 本项目遵循 AGPL-3.0 许可协议, 详见 [LICENSE](LICENSE) 文件。

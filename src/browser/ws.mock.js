@@ -4,8 +4,10 @@ module.exports = class extends WebSocket {
             this.addEventListener('message', (event) => {
                 listener(event.data);
             });
-        } else {
-            this.addEventListener(event, listener);
+        } else if (event === 'error') {
+            this.addEventListener('error', (event) => {
+                listener({message: event});
+            });
         }
     }
 };

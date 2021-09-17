@@ -49,6 +49,11 @@ const HttpApiAdapter = makeApiAdapter({
             type: Number,
             description: 'http轮询周期(毫秒)',
             default: () => 500
+        },
+        ssl: {
+            type: Boolean,
+            description: '是否使用SSL',
+            default: () => false
         }
     },
     data: {
@@ -59,7 +64,7 @@ const HttpApiAdapter = makeApiAdapter({
             // 构造axios请求config
             const config: AxiosRequestConfig = {
                 method,
-                url: `http://${this.configs.host}:${this.configs.port}/${uri}`,
+                url: `http${this.configs.ssl ? 's' : ''}://${this.configs.host}:${this.configs.port}/${uri}`,
                 headers: {}
             };
 
