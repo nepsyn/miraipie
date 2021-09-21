@@ -1,5 +1,4 @@
 const path = require('path');
-const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 const webpack = require('webpack');
 
 module.exports = {
@@ -8,10 +7,8 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'miraipie.bundle.js',
-        library: {
-            type: 'umd',
-            name: 'Miraipie'
-        }
+        library: 'Miraipie',
+        libraryTarget: 'umd'
     },
     plugins: [
         new webpack.NormalModuleReplacementPlugin(
@@ -28,16 +25,11 @@ module.exports = {
         ),
         new webpack.DefinePlugin({
             'process.env': {}
-        }),
-        new NodePolyfillPlugin()
+        })
     ],
     mode: 'production',
-    resolve: {
-        fallback: {
-            fs: false,
-            cluster: false,
-            net: false,
-            tls: false,
-        }
+    node: {
+        path: true,
+        Buffer: true
     }
 };
