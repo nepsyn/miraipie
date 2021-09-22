@@ -1,5 +1,6 @@
 module.exports = {
     title: 'miraipie',
+    base: '/miraipie/',
     description: 'miraipie文档',
     themeConfig: {
         sidebar: [
