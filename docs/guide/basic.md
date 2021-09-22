@@ -81,7 +81,7 @@ Miraipie.Chat.findFriend(/* 换成好友的QQ号 */ 123456789).then(async (chat)
 
 如果发送成功，效果图如下所示：
 
-<Chat :messages="[{avatar: '/Jerry.jpeg', content: 'Hello World!', fromBot: true}]"></Chat>
+<Chat :messages="[{avatar: '/images/Tom.jpeg', content: 'Hello World!', fromBot: true}]"></Chat>
 
 这里的 `chat` 是 miraipie 中抽象的一个概念，它代表与一个对象的聊天窗口。
 和 QQ 客户端一样，你的聊天窗口可以分为和好友的聊天窗口、群聊的聊天窗口和私聊的聊天窗口。
@@ -105,7 +105,7 @@ await chat.send(Miraipie.makeImage({
     url: 'https://tvax1.sinaimg.cn/large/007Tv3Vmly1gufg1l5szij31hc0u07cv'
 }));
 ```
-<Chat :messages="[{avatar: '/Jerry.jpeg', type: 'Image', content: 'https://tvax1.sinaimg.cn/large/007Tv3Vmly1gufg1l5szij31hc0u07cv', fromBot: true}]"></Chat>
+<Chat :messages="[{avatar: '/images/Tom.jpeg', type: 'Image', content: 'https://tvax1.sinaimg.cn/large/007Tv3Vmly1gufg1l5szij31hc0u07cv', fromBot: true}]"></Chat>
 
 ## 响应他人的消息
 
@@ -126,11 +126,11 @@ Miraipie.Chat.findFriend(/* 换成好友的QQ号 */ 123456789).then(async (chat)
 
 之后通过该好友向机器人发送任意一条消息，就会有如下所示的响应：
 
-<Chat :messages="[{avatar: '/Jerry.jpeg', content: '人类的本质'}, {avatar: 'Tom.jpeg', content: '人类的本质', fromBot: true}]"></Chat>
+<Chat :messages="[{avatar: '/images/Jerry.jpeg', content: '人类的本质'}, {avatar: '/images/Tom.jpeg', content: '人类的本质', fromBot: true}]"></Chat>
 
 但只响应一次消息的复读机往往是不符合直觉的：
 
-<Chat :messages="[{avatar: '/Jerry.jpeg', content: '人类的本质'}, {avatar: 'Tom.jpeg', content: '人类的本质', fromBot: true}, {avatar: '/Jerry.jpeg', content: '你最帅！'}, {avatar: '/Jerry.jpeg', content: '为什么不说话？'}]"></Chat>
+<Chat :messages="[{avatar: '/images/Jerry.jpeg', content: '人类的本质'}, {avatar: '/images/Tom.jpeg', content: '人类的本质', fromBot: true}, {avatar: '/images/Jerry.jpeg', content: '你最帅！'}, {avatar: '/images/Jerry.jpeg', content: '为什么不说话？'}]"></Chat>
 
 ### 持续性的响应
 
@@ -148,16 +148,16 @@ app.on('FriendMessage', async (chatMessage) => {
 
 现在你的机器人会持续性地响应指定好友发送的消息了：
 
-<Chat :messages="[{avatar: '/Jerry.jpeg', content: '人类的本质'}, {avatar: '/Tom.jpeg', content: '人类的本质', fromBot: true}, {avatar: '/Jerry.jpeg', content: '你最帅！'}, {avatar: '/Tom.jpeg', content: '你最帅！', fromBot: true}, {avatar: '/Jerry.jpeg', type: 'Image', content: 'bro.jpg'}, {avatar: '/Tom.jpeg', type: 'Image', content: 'bro.jpg', fromBot: true}]"></Chat>
+<Chat :messages="[{avatar: '/images/Jerry.jpeg', content: '人类的本质'}, {avatar: '/images/Tom.jpeg', content: '人类的本质', fromBot: true}, {avatar: '/images/Jerry.jpeg', content: '你最帅！'}, {avatar: '/images/Tom.jpeg', content: '你最帅！', fromBot: true}, {avatar: '/images/Jerry.jpeg', type: 'Image', content: '/images/bro.jpg'}, {avatar: '/images/Tom.jpeg', type: 'Image', content: '/images/bro.jpg', fromBot: true}]"></Chat>
 
-### 我该如何决定哪种响应方式？
+### 我该如何决定哪种响应方式
 
 对于机器人的某个长期支持的服务（点歌、搜题等）来说，一般应采用持续响应的方式。
 对于一些只作用一次的功能（抢答、确认操作等），一般采用一次性响应的方式。
 
 在实际开发中，通常会遇到两者组合的情况。请设想下图中的情况：
 
-<Chat :messages="[{avatar: '/Jerry.jpeg', content: 'rm -rf /学习资料'}, {avatar: '/Tom.jpeg', content: '确定要删除吗？', fromBot: true}, {avatar: '/Jerry.jpeg', content: '确定'}, {avatar: '/Tom.jpeg', content: '已删除', fromBot: true}, {avatar: '/Jerry.jpeg', content: 'rm -rf /'}, {avatar: '/Tom.jpeg', content: '确定要删除吗？', fromBot: true}, {avatar: '/Jerry.jpeg', content: '我闹着玩的'}, {avatar: '/Tom.jpeg', content: '已取消删除', fromBot: true}]"></Chat>
+<Chat :messages="[{avatar: '/images/Jerry.jpeg', content: 'rm -rf /学习资料'}, {avatar: '/images/Tom.jpeg', content: '确定要删除吗？', fromBot: true}, {avatar: '/images/Jerry.jpeg', content: '确定'}, {avatar: '/images/Tom.jpeg', content: '已删除', fromBot: true}, {avatar: '/images/Jerry.jpeg', content: 'rm -rf /'}, {avatar: '/images/Tom.jpeg', content: '确定要删除吗？', fromBot: true}, {avatar: '/images/Jerry.jpeg', content: '我闹着玩的'}, {avatar: '/images/Tom.jpeg', content: '已取消删除', fromBot: true}]"></Chat>
 
 对于这种长期服务操作需要确认的情况，单独使用两种响应方式都会使代码变得十分笨重。两种方式组合起来会以很优雅的方式实现功能：
 
@@ -167,7 +167,7 @@ app.on('FriendMessage', async (chatMessage) => {
         const chat = new FriendChat(chatMessage.sender);
         // 等待下一条确认消息
         const confirmMessage = await chat.nextMessage();
-        if (confirmMessage.toDisplayString() === '确认') {
+        if (confirmMessage.toDisplayString() === '确定') {
             /* 执行删除操作... */
             await chat.send('已删除');
         } else {

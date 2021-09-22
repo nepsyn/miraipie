@@ -14,3 +14,6 @@ miraipie 在你使用 Typescript/Javascript 构建自己的机器人应用程序
 2. **开放的拓展**。miraipie 中， 一个独立拓展就是一个函数， 开发简单但功能齐全， 同时 miraipie 的拓展对也可以发布为 NPM 包以供他人使用， 共同丰富机器人的功能。
 3. **完整的日志**。miraipie 应用程序有完善的日志系统， 每个插件都有其独自的 `logger` ，在插件执行或应用程序出错时可以快速定位出错位置，便于开发中的调试修改。
 4. **及时的更新**。miraipie 总会保持与 mirai-api-http 的更新， 以保证开发者总是能使用 mirai-api-http 提供的新特性。另外，miraipie 应用程序启动时会检查与 mirai-api-http 的版本兼容性并通知用户， 以让用户及时更新 mirai-api-http 或 miraipie 版本。
+
+## miraipie 是如何工作的
+

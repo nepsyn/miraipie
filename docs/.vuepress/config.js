@@ -19,6 +19,13 @@ module.exports = {
                     '/guide/listen',
                     '/guide/basic'
                 ]
+            },
+            {
+                title: '进阶',
+                collapsable: false,
+                children: [
+
+                ]
             }
         ],
         nav: [
