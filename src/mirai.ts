@@ -80,6 +80,9 @@ export interface MessageChain extends Array<SingleMessage> {
     /** 消息 id */
     sourceId: number;
 
+    /** 消息发送时间 */
+    time: number;
+
     /** 选择对应类型的单一消息 */
     select<T extends SingleMessageType>(type: T): this;
 
@@ -256,7 +259,7 @@ export interface ForwardNode {
     /** 发送时间戳 */
     time: number;
     /** 发送人名称 */
-    senderName: number;
+    senderName: string;
     /** 消息链 */
     messageChain: SingleMessage[];
     /** 消息id */

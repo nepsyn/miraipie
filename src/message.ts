@@ -1,5 +1,5 @@
 import * as Mirai from './mirai';
-import {PokeType, SingleMessage, SingleMessageType} from './mirai';
+import {PokeType, SingleMessage, SingleMessageMap, SingleMessageType} from './mirai';
 
 /**
  * 判断单一消息类型(typescript类型保护)
@@ -79,8 +79,8 @@ function toDisplayString<T extends SingleMessage>(this: T): string {
 }
 
 /** 消息链 */
-export class MessageChain extends Array<SingleMessage> implements Mirai.MessageChain {
-    [index: number]: SingleMessage;
+export class MessageChain<T extends SingleMessage = SingleMessage> extends Array<SingleMessage> implements Mirai.MessageChain {
+    [index: number]: T;
 
     constructor(...args) {
         super(...args);
@@ -141,6 +141,16 @@ export class MessageChain extends Array<SingleMessage> implements Mirai.MessageC
     }
 
     /**
+     * 获取消息链的消息发送时间， 如果没有将返回null
+     * @return 消息发送时间
+     * @since 1.2.2
+     */
+    get time(): number {
+        if (this.length > 0 && this[0].isType('Source')) return this[0].time;
+        else return null;
+    }
+
+    /**
      * <strong>原地</strong>选择保留某类型的单一消息
      * @param type 单一消息类型
      * @return 消息链
@@ -151,7 +161,7 @@ export class MessageChain extends Array<SingleMessage> implements Mirai.MessageC
      * // MessageChain(1) [{type: 'AtAll'}]
      * chain;
      */
-    select<T extends SingleMessageType>(type: T): this {
+    select<D extends SingleMessageType>(type: D): this {
         this.forEach((message, index) => {
             if (message.type !== type) this.splice(index, 1);
         });
@@ -169,8 +179,8 @@ export class MessageChain extends Array<SingleMessage> implements Mirai.MessageC
      * // MessageChain(3) [{type: 'AtAll'}, {type: 'Plain', text: 'Hello '}, {type: 'Plain', text: 'World!'}]
      * chain;
      */
-    selected<T extends SingleMessageType>(type: T): MessageChain {
-        return MessageChain.from(Array.from(this).filter((message) => message.type === type));
+    selected<D extends SingleMessageType>(type: D): MessageChain<SingleMessageMap[D]> {
+        return MessageChain.from(Array.from(this).filter((message) => message.type === type)) as MessageChain<SingleMessageMap[D]>;
     }
 
     /**
@@ -184,7 +194,7 @@ export class MessageChain extends Array<SingleMessage> implements Mirai.MessageC
      * // MessageChain(1) [{type: 'AtAll'}]
      * chain;
      */
-    drop<T extends SingleMessageType>(type: T): this {
+    drop<D extends SingleMessageType>(type: D): this {
         for (let i = this.length - 1; i >= 0; i--) {
             if (this[i].type === type) this.splice(i, 1);
         }
@@ -202,8 +212,8 @@ export class MessageChain extends Array<SingleMessage> implements Mirai.MessageC
      * // MessageChain(3) [{type: 'AtAll'}, {type: 'Plain', text: 'Hello '}, {type: 'Plain', text: 'World!'}]
      * chain;
      */
-    dropped<T extends SingleMessageType>(type: T): MessageChain {
-        return MessageChain.from(Array.from(this).filter((message) => message.type !== type));
+    dropped<D extends SingleMessageType>(type: D): MessageChain<Exclude<SingleMessage, SingleMessageMap[D]>> {
+        return MessageChain.from(Array.from(this).filter((message) => message.type !== type)) as MessageChain<Exclude<SingleMessage, SingleMessageMap[D]>>;
     }
 
     /**
@@ -493,7 +503,7 @@ export function makeMusicShare(options: MusicShareOptions): Mirai.MusicShare {
  * @param messageChain 消息链
  * @param messageId 消息id
  */
-export function ForwardNode(senderId: number, time: number, senderName: number, messageChain: MessageChain, messageId: number): Mirai.ForwardNode {
+export function ForwardNode(senderId: number, time: number, senderName: string, messageChain: MessageChain, messageId: number): Mirai.ForwardNode {
     return {
         senderId, time, senderName, messageChain, messageId
     };

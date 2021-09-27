@@ -131,7 +131,7 @@ export class ApplicationConfig {
         return {
             qq: config.qq,
             adapterInUse: config.adapterInUse || null,
-            logDirectory: config.logDirectory || 'log',
+            logDirectory: config.logDirectory || null,
             logLevel: config.logLevel || 'debug',
             verbose: config.verbose || false,
             adapters: config.adapters || {},
