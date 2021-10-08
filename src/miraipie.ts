@@ -410,7 +410,7 @@ export class MiraiPieApplication extends EventEmitter {
     }
 }
 
-export {ResponseCode} from './mirai';
+export {ResponseCode, FaceType} from './mirai';
 export * as Mirai from './mirai';
 export * from './adapter';
 export * from './pie';

@@ -62,7 +62,7 @@ function toDisplayString<T extends SingleMessage>(this: T): string {
     if (this.isType('Quote')) return `[回复]${this.origin.toString()}`;
     else if (this.isType('At')) return `@${this.target}`;
     else if (this.isType('AtAll')) return `@全体成员`;
-    else if (this.isType('Face')) return `[${this.name || '表情'}]`;
+    else if (this.isType('Face')) return `[${this.name || Mirai.FaceType[this.faceId] || '表情'}]`;
     else if (this.isType('Plain')) return `${this.text}`;
     else if (this.isType('Image')) return `[图片]`;
     else if (this.isType('FlashImage')) return `[闪照]`;
@@ -283,9 +283,9 @@ export function AtAll(): Mirai.AtAll {
 /**
  * 构造表情消息
  * @param faceId 表情id
- * @param name 表情名称
+ * @param name 表情名称（使用时需将 faceId 设置为 undefined）
  */
-export function Face(faceId?: number, name?: string): Mirai.Face {
+export function Face(faceId?: Mirai.FaceType | number, name?: string): Mirai.Face {
     return {
         type: 'Face',
         faceId, name,
@@ -503,7 +503,7 @@ export function makeMusicShare(options: MusicShareOptions): Mirai.MusicShare {
  * @param messageChain 消息链
  * @param messageId 消息id
  */
-export function ForwardNode(senderId: number, time: number, senderName: string, messageChain: MessageChain, messageId: number): Mirai.ForwardNode {
+export function ForwardNode(senderId: number, time: number, senderName: string, messageChain: MessageChain | SingleMessage[], messageId: number): Mirai.ForwardNode {
     return {
         senderId, time, senderName, messageChain, messageId
     };
