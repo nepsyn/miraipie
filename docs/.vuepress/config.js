@@ -25,7 +25,8 @@ module.exports = {
                 title: '进阶',
                 collapsable: false,
                 children: [
-
+                    '/pro/message',
+                    '/pro/events',
                 ]
             }
         ],

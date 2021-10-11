@@ -7,7 +7,7 @@ import log4js from 'log4js';
 import path from 'path';
 import MixedApiAdapter from './builtin/MixedApiAdapter';
 import {ApplicationConfig, ConfigMeta} from './config';
-import createApp, {MiraiApiHttpAdapter, Pie} from './miraipie';
+import createApp, {MiraiApiHttpAdapter, Pie, Mirai} from './miraipie';
 import {makeTemplate} from './utils';
 
 log4js.configure({
@@ -150,7 +150,7 @@ function saveConfigFile(config: ApplicationConfig, path: string) {
 
 // miraipie
 program
-    .version(`miraipie ${require('../package.json').version}`, '-V, --version', '显示版本信息')
+    .version(`miraipie ${require('../package.json').version}  for mirai-api-http ${Mirai.MIRAI_API_HTTP_VERSION}`, '-V, --version', '显示版本信息')
     .option('-c, --config <path>', 'miraipie的配置文件路径', 'miraipie.json')
     .helpOption('-h, --help', '显示帮助信息')
     .addHelpCommand('help [command]', '显示命令帮助');
