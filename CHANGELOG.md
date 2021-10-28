@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.4
+
+- 适配 mirai-api-http v2.3.3。
+- 优化 机器人事件监听器类型。
+
 ## v1.2.3
 
 - 添加 表情枚举类型 `FaceType` 。

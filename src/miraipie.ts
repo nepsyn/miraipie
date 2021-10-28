@@ -5,12 +5,12 @@ import {MiraiApiHttpAdapter} from './adapter';
 import {Chat, FriendChat, GroupChat, TempChat} from './chat';
 import {ApplicationConfig, checkUserConfig} from './config';
 import {MessageChain} from './message';
-import {ChatMessage, ChatMessageType, Event, EventType, Friend, GroupMember} from './mirai';
+import {ChatMessage, ChatMessageMap, ChatMessageType, Event, EventMap, EventType, Friend, GroupMember} from './mirai';
 import {Pie} from './pie';
 import {makeReadonly} from './utils';
 
-type MessageReceivedListener = (chatMessage: ChatMessage) => any;
-type EventReceivedListener = (event: Event) => any;
+type MessageReceivedListener<T extends ChatMessage> = (chatMessage: T) => any;
+type EventReceivedListener<T extends Event> = (event: T) => any;
 type LifecycleHookListener = () => any;
 
 /** MiraiPie 应用程序 */
@@ -339,50 +339,50 @@ export class MiraiPieApplication extends EventEmitter {
         if (this.api && this.api.listening) this.api.stop();
     }
 
-    addListener(e: 'message', listener: MessageReceivedListener): this;
-    addListener(e: ChatMessageType, listener: MessageReceivedListener): this;
-    addListener(e: 'event', listener: EventReceivedListener): this;
-    addListener(e: EventType, listener: EventReceivedListener): this;
+    addListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
+    addListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+    addListener(e: 'event', listener: EventReceivedListener<Event>): this;
+    addListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
     addListener(e: 'listen', listener: LifecycleHookListener): this;
     addListener(e: 'stop', listener: LifecycleHookListener): this;
     addListener(event, listener): this {
         return super.addListener(event, listener);
     }
 
-    once(e: 'message', listener: MessageReceivedListener): this;
-    once(e: ChatMessageType, listener: MessageReceivedListener): this;
-    once(e: 'event', listener: EventReceivedListener): this;
-    once(e: EventType, listener: EventReceivedListener): this;
+    once(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
+    once<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+    once(e: 'event', listener: EventReceivedListener<Event>): this;
+    once<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
     once(e: 'listen', listener: LifecycleHookListener): this;
     once(e: 'stop', listener: LifecycleHookListener): this;
     once(event, listener): this {
         return super.once(event, listener);
     }
 
-    on(e: 'message', listener: MessageReceivedListener): this;
-    on(e: ChatMessageType, listener: MessageReceivedListener): this;
-    on(e: 'event', listener: EventReceivedListener): this;
-    on(e: EventType, listener: EventReceivedListener): this;
+    on(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
+    on<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+    on(e: 'event', listener: EventReceivedListener<Event>): this;
+    on<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
     on(e: 'listen', listener: LifecycleHookListener): this;
     on(e: 'stop', listener: LifecycleHookListener): this;
     on(event, listener): this {
         return super.on(event, listener);
     }
 
-    prependListener(e: 'message', listener: MessageReceivedListener): this;
-    prependListener(e: ChatMessageType, listener: MessageReceivedListener): this;
-    prependListener(e: 'event', listener: EventReceivedListener): this;
-    prependListener(e: EventType, listener: EventReceivedListener): this;
+    prependListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
+    prependListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+    prependListener(e: 'event', listener: EventReceivedListener<Event>): this;
+    prependListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
     prependListener(e: 'listen', listener: LifecycleHookListener): this;
     prependListener(e: 'stop', listener: LifecycleHookListener): this;
     prependListener(event, listener): this {
         return super.prependListener(event, listener);
     }
 
-    prependOnceListener(e: 'message', listener: MessageReceivedListener): this;
-    prependOnceListener(e: ChatMessageType, listener: MessageReceivedListener): this;
-    prependOnceListener(e: 'event', listener: EventReceivedListener): this;
-    prependOnceListener(e: EventType, listener: EventReceivedListener): this;
+    prependOnceListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
+    prependOnceListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+    prependOnceListener(e: 'event', listener: EventReceivedListener<Event>): this;
+    prependOnceListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
     prependOnceListener(e: 'listen', listener: LifecycleHookListener): this;
     prependOnceListener(e: 'stop', listener: LifecycleHookListener): this;
     prependOnceListener(event, listener): this {
@@ -399,10 +399,10 @@ export class MiraiPieApplication extends EventEmitter {
         return super.emit(event, ...args);
     }
 
-    listeners(e: 'message'): MessageReceivedListener[];
-    listeners(e: ChatMessageType): MessageReceivedListener[];
-    listeners(e: 'event'): EventReceivedListener[];
-    listeners(e: EventType): EventReceivedListener[];
+    listeners(e: 'message'): MessageReceivedListener<ChatMessage>[];
+    listeners<T extends ChatMessageType>(e: T): MessageReceivedListener<ChatMessageMap[T]>[];
+    listeners(e: 'event'): EventReceivedListener<Event>[];
+    listeners<T extends EventType>(e: T): EventReceivedListener<EventMap[T]>[];
     listeners(e: 'listen'): LifecycleHookListener[];
     listeners(e: 'stop'): LifecycleHookListener[];
     listeners(event) {

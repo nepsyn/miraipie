@@ -202,7 +202,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param eventId 事件id
      * @param fromId 申请人QQ号
      * @param groupId 申请人群号, 可能为0
-     * @param operate 操作类型
+     * @param operate 操作类型 (0-同意|1-拒绝|2-拒绝并加入黑名单)
      * @param message 回复的信息
      */
     handleNewFriendRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string): Promise<ApiResponse>;
@@ -212,7 +212,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param eventId 事件id
      * @param fromId 申请人QQ号
      * @param groupId 申请人群号
-     * @param operate 操作类型
+     * @param operate 操作类型 (0-同意|1-拒绝|2-忽略|3-拒绝并加入黑名单|4-忽略并加入黑名单)
      * @param message 回复的信息
      */
     handleMemberJoinRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string): Promise<ApiResponse>;
@@ -222,7 +222,7 @@ type MiraiApiHttpAdapterMethodOptions = {
      * @param eventId 事件id
      * @param fromId 邀请人(好友)QQ号
      * @param groupId 邀请进入的群号
-     * @param operate 操作类型
+     * @param operate 操作类型 (0-同意|1-拒绝)
      * @param message 回复的信息
      */
     handleBotInvitedJoinGroupRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string): Promise<ApiResponse>;
