@@ -10,7 +10,7 @@ type ConfigConstructor<T> = {
 type ConfigDefaultFactory<T> = (...args: []) => T;
 
 /** 配置项 */
-interface Config<T = any, D = T> {
+type Config<T = any> = {
     /** 配置类型 */
     type: ConfigConstructor<T>;
     /** 是否必要 */
@@ -18,30 +18,30 @@ interface Config<T = any, D = T> {
     /** 配置项描述 */
     description?: string;
     /** 默认值工厂函数 */
-    default?: ConfigDefaultFactory<D>;
+    default?: ConfigDefaultFactory<T>;
 }
 
 /** 配置元定义 */
-export interface ConfigMeta {
+export type ConfigMeta = {
     [key: string]: Config;
-}
+};
 
 /** 用户配置 */
 export type UserConfigs<C extends ConfigMeta> = {
-    [P in keyof C]: ReturnType<C[P]['default']>;
+    [P in keyof C]: ReturnType<C[P]['type']>;
 };
 
 /** 通过元定义生成默认用户配置 */
 export function makeConfigs<C extends ConfigMeta>(configMeta: C): UserConfigs<C> {
-    const configs = {};
+    const configs = {} as UserConfigs<C>;
     for (const key in configMeta || {}) {
-        if (configMeta.hasOwnProperty(key)) configs[key] = configMeta[key].default && configMeta[key].default();
+        if (configMeta.hasOwnProperty(key)) configs[key as keyof C] = configMeta[key].default && configMeta[key].default();
     }
-    return configs as UserConfigs<C>;
+    return configs;
 }
 
 export function checkUserConfig<C extends ConfigMeta>(configMeta: C, configs: Partial<UserConfigs<C>>, logger?: Logger) {
-    for (const prop in configMeta) {
+    for (const prop of Object.keys(configMeta)) {
         if (prop in configs) {
             if (typeof configs[prop] !== typeof configMeta[prop].type() && logger) {
                 logger.warn(`配置项 ${prop} 不符合类型定义, 需要类型 ${typeof configMeta[prop].type()}, 得到类型 ${typeof configs[prop]}`)

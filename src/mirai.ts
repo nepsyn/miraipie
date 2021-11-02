@@ -69,19 +69,16 @@ export interface SingleMessage {
 
 /** 原始消息链 */
 export interface MessageChain extends Array<SingleMessage> {
-    [index: number]: SingleMessage;
-
     /** 第一个有效单一消息 */
     firstClientMessage: SingleMessage;
-
     /** 第一个有效单一消息 */
     f: SingleMessage;
-
     /** 消息 id */
     sourceId: number;
-
     /** 消息发送时间 */
     time: number;
+
+    [index: number]: SingleMessage;
 
     /** 选择对应类型的单一消息 */
     select<T extends SingleMessageType>(type: T): this;

@@ -30,11 +30,48 @@ export abstract class Chat {
     readonly type: ChatType;
 
     /**
-     * 发送消息
-     * @param messageChain 消息链
-     * @param quoteMessageId 引用回复消息id
+     * 撤回消息
+     * @param messageId 消息id
+     * @return 是否撤回成功
      */
-    protected abstract _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number>;
+    static async recall(messageId: number): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.recall(messageId);
+        return resp?.code === ResponseCode.Success;
+    }
+
+    /**
+     * 打开指定好友的聊天窗, 没有找到时返回null
+     * @param friendId 好友QQ号
+     * @since 1.1.15
+     * @example
+     * const chat = await Chat.findFriend(10000000);
+     * await chat.send('Hello World!');
+     */
+    static async findFriend(friendId: number): Promise<FriendChat> {
+        const resp = await MiraiPieApplication.instance.api.getFriendList();
+        for (const friend of resp.data) {
+            if (friend.id === friendId) return new FriendChat(friend);
+        }
+        return null;
+    }
+
+    /**
+     * 打开指定群聊的聊天窗, 没有找到时返回null, 该聊天窗会将群主作为聊天窗的消息发送人
+     * @param groupId 群号
+     * @since 1.1.15
+     * @example
+     * const chat = await Chat.findGroup(20000000);
+     * await chat.send('Hello World!');
+     */
+    static async findGroup(groupId: number): Promise<GroupChat> {
+        const resp = await MiraiPieApplication.instance.api.getMemberList(groupId);
+        if (resp.code === ResponseCode.Success) {
+            for (const member of resp.data) {
+                if (member.permission === 'OWNER') return new GroupChat(member);
+            }
+        }
+        return null;
+    }
 
     /**
      * 发送一条消息<br/>
@@ -82,16 +119,6 @@ export abstract class Chat {
      */
     abstract sendNudge(targetId?: number): Promise<boolean>;
 
-    /**
-     * 撤回消息
-     * @param messageId 消息id
-     * @return 是否撤回成功
-     */
-    static async recall(messageId: number): Promise<boolean> {
-        const resp = await MiraiPieApplication.instance.api.recall(messageId);
-        return resp?.code === ResponseCode.Success;
-    }
-
     /** 判断是否为好友聊天窗口 */
     isFriendChat(): this is FriendChat {
         return this.type === 'FriendChat';
@@ -108,56 +135,19 @@ export abstract class Chat {
     }
 
     /**
-     * 打开指定好友的聊天窗, 没有找到时返回null
-     * @param friendId 好友QQ号
-     * @since 1.1.15
-     * @example
-     * const chat = await Chat.findFriend(10000000);
-     * await chat.send('Hello World!');
+     * 发送消息
+     * @param messageChain 消息链
+     * @param quoteMessageId 引用回复消息id
      */
-    static async findFriend(friendId: number): Promise<FriendChat> {
-        const resp = await MiraiPieApplication.instance.api.getFriendList();
-        for (const friend of resp.data) {
-            if (friend.id === friendId) return new FriendChat(friend);
-        }
-        return null;
-    }
-
-    /**
-     * 打开指定群聊的聊天窗, 没有找到时返回null, 该聊天窗会将群主作为聊天窗的消息发送人
-     * @param groupId 群号
-     * @since 1.1.15
-     * @example
-     * const chat = await Chat.findGroup(20000000);
-     * await chat.send('Hello World!');
-     */
-    static async findGroup(groupId: number): Promise<GroupChat> {
-        const resp = await MiraiPieApplication.instance.api.getMemberList(groupId);
-        if (resp.code === ResponseCode.Success) {
-            for (const member of resp.data) {
-                if (member.permission === 'OWNER') return new GroupChat(member);
-            }
-        }
-        return null;
-    }
+    protected abstract _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number>;
 }
 
 /**
  * 好友聊天窗
  */
 export class FriendChat extends Chat {
-    readonly type = 'FriendChat';
     readonly sender: Friend;
-
-    constructor(public readonly contact: Friend) {
-        super();
-        this.sender = contact;
-    }
-
-    protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
-        const resp = await MiraiPieApplication.instance.api.sendFriendMessage(this.contact.id, messageChain, quoteMessageId);
-        return resp?.messageId;
-    }
+    readonly type = 'FriendChat';
 
     async nextMessage(timeout?: number): Promise<MessageChain> {
         return new Promise((resolve, reject) => {
@@ -179,6 +169,16 @@ export class FriendChat extends Chat {
     async sendNudge(targetId?: number): Promise<boolean> {
         const resp = await MiraiPieApplication.instance.api.sendNudge(targetId || this.contact.id, this.contact.id, 'Friend');
         return resp?.code === ResponseCode.Success;
+    }
+
+    protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
+        const resp = await MiraiPieApplication.instance.api.sendFriendMessage(this.contact.id, messageChain, quoteMessageId);
+        return resp?.messageId;
+    }
+
+    constructor(public readonly contact: Friend) {
+        super();
+        this.sender = contact;
     }
 
     /**
@@ -204,28 +204,8 @@ export class FriendChat extends Chat {
  * 群聊聊天窗
  */
 export class GroupChat extends Chat {
-    readonly type = 'GroupChat';
     readonly contact: Group;
-
-    constructor(public readonly sender: GroupMember) {
-        super();
-        this.contact = sender.group;
-    }
-
-    /** 通过群聊对象构造群聊天窗口 */
-    static from() {
-
-    }
-
-    /** 机器人在本群权限 */
-    get permission(): GroupPermission {
-        return this.contact.permission;
-    }
-
-    protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
-        const resp = await MiraiPieApplication.instance.api.sendGroupMessage(this.contact.id, messageChain, quoteMessageId);
-        return resp?.messageId;
-    }
+    readonly type = 'GroupChat';
 
     async nextMessage(timeout?: number): Promise<MessageChain> {
         return new Promise((resolve, reject) => {
@@ -242,6 +222,41 @@ export class GroupChat extends Chat {
                 }, timeout);
             }
         });
+    }
+
+    async sendNudge(targetId: number): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.sendNudge(targetId, this.contact.id, 'Group');
+        return resp?.code === ResponseCode.Success;
+    }
+
+    protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
+        const resp = await MiraiPieApplication.instance.api.sendGroupMessage(this.contact.id, messageChain, quoteMessageId);
+        return resp?.messageId;
+    }
+
+    constructor(public readonly sender: GroupMember) {
+        super();
+        this.contact = sender.group;
+    }
+
+    /** 机器人在本群权限 */
+    get permission(): GroupPermission {
+        return this.contact.permission;
+    }
+
+    /** 通过群聊对象构造群聊天窗口 */
+    static from() {
+
+    }
+
+    /**
+     * 设置群精华消息
+     * @param messageId 消息id
+     * @return 是否设置成功
+     */
+    static async setEssence(messageId: number): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.setEssence(messageId);
+        return resp?.code === ResponseCode.Success;
     }
 
     /**
@@ -264,11 +279,6 @@ export class GroupChat extends Chat {
                 }, timeout);
             }
         });
-    }
-
-    async sendNudge(targetId: number): Promise<boolean> {
-        const resp = await MiraiPieApplication.instance.api.sendNudge(targetId, this.contact.id, 'Group');
-        return resp?.code === ResponseCode.Success;
     }
 
     /**
@@ -367,16 +377,6 @@ export class GroupChat extends Chat {
      */
     async unmuteAll(): Promise<boolean> {
         const resp = await MiraiPieApplication.instance.api.unmuteAll(this.contact.id);
-        return resp?.code === ResponseCode.Success;
-    }
-
-    /**
-     * 设置群精华消息
-     * @param messageId 消息id
-     * @return 是否设置成功
-     */
-    static async setEssence(messageId: number): Promise<boolean> {
-        const resp = await MiraiPieApplication.instance.api.setEssence(messageId);
         return resp?.code === ResponseCode.Success;
     }
 
@@ -490,18 +490,8 @@ export class GroupChat extends Chat {
  * 临时消息聊天窗
  */
 export class TempChat extends Chat {
-    readonly type = 'TempChat';
     readonly sender: GroupMember;
-
-    constructor(public readonly contact: GroupMember) {
-        super();
-        this.sender = contact;
-    }
-
-    protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
-        const resp = await MiraiPieApplication.instance.api.sendTempMessage(this.contact.id, this.contact.group.id, messageChain, quoteMessageId);
-        return resp?.messageId;
-    }
+    readonly type = 'TempChat';
 
     async nextMessage(timeout?: number): Promise<MessageChain> {
         return new Promise((resolve, reject) => {
@@ -523,6 +513,16 @@ export class TempChat extends Chat {
     async sendNudge(targetId?: number): Promise<boolean> {
         const resp = await MiraiPieApplication.instance.api.sendNudge(targetId || this.contact.id, this.contact.id, 'Stranger');
         return resp?.code === ResponseCode.Success;
+    }
+
+    protected async _send(messageChain: MessageChain, quoteMessageId?: number): Promise<number> {
+        const resp = await MiraiPieApplication.instance.api.sendTempMessage(this.contact.id, this.contact.group.id, messageChain, quoteMessageId);
+        return resp?.messageId;
+    }
+
+    constructor(public readonly contact: GroupMember) {
+        super();
+        this.sender = contact;
     }
 
     /**

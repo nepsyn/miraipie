@@ -11,6 +11,33 @@ export type PieFilterBuilder = (...args: any[]) => PieFilter;
 
 /** pie消息过滤器 */
 export class PieFilter {
+    /** 消息包含@我 */
+    static atMe: PieFilter = {
+        sign: 'AtMe',
+        handler: (chat, chain) => {
+            return chain.selected('At').some((at) => (at as At).target === MiraiPieApplication.instance.qq)
+        }
+    };
+    /** 消息包含@全体成员 */
+    static atAll: PieFilter = {
+        sign: 'AtAll',
+        handler: (chat, chain) => chain.selected('AtAll').length > 0
+    };
+    /** 消息来自好友 */
+    static fromFriend: PieFilter = {
+        sign: 'FromFriend',
+        handler: (chat) => chat.isFriendChat()
+    }
+    /** 消息来自群聊 */
+    static fromGroup: PieFilter = {
+        sign: 'FromGroup',
+        handler: (chat) => chat.isGroupChat()
+    }
+    /** 消息来自群成员 */
+    static fromMember: PieFilter = {
+        sign: 'FromMember',
+        handler: (chat) => chat.isTempChat()
+    }
     /** 过滤器签名, 通常要能表达过滤器的意图 */
     sign: string;
     /**
@@ -20,14 +47,6 @@ export class PieFilter {
      * @param pie 当前pie对象
      */
     handler: (chat: Chat, chain: MessageChain, pie: Pie) => boolean;
-
-    /** 消息包含@我 */
-    static atMe: PieFilter = {
-        sign: 'AtMe',
-        handler: (chat, chain) => {
-            return chain.selected('At').some((at) => (at as At).target === MiraiPieApplication.instance.qq)
-        }
-    };
 
     /**
      * 消息包含@指定QQ号群成员
@@ -41,12 +60,6 @@ export class PieFilter {
             }
         };
     }
-
-    /** 消息包含@全体成员 */
-    static atAll: PieFilter = {
-        sign: 'AtAll',
-        handler: (chat, chain) => chain.selected('AtAll').length > 0
-    };
 
     /**
      * 消息来自指定账号
@@ -113,34 +126,16 @@ export class PieFilter {
             handler: (chat, chain, pie) => filters.some((filter) => filter.handler(chat, chain, pie))
         };
     }
-
-    /** 消息来自好友 */
-    static fromFriend: PieFilter = {
-        sign: 'FromFriend',
-        handler: (chat) => chat.isFriendChat()
-    }
-
-    /** 消息来自群聊 */
-    static fromGroup: PieFilter = {
-        sign: 'FromGroup',
-        handler: (chat) => chat.isGroupChat()
-    }
-
-    /** 消息来自群成员 */
-    static fromMember: PieFilter = {
-        sign: 'FromMember',
-        handler: (chat) => chat.isTempChat()
-    }
 }
 
-interface MethodsOption {
-    [key: string]: (this: Pie, ...args: any) => any;
-}
+type PieMethodOptions<PieInstance> = {
+    [key: string]: (this: PieInstance, ...args: any) => any;
+};
 
-type MessageReceivedListener = (chat: Chat, chain: MessageChain) => any;
-type LifecycleHookListener = () => any;
+type MessageReceivedListener<PieInstance> = (this: PieInstance, chat: Chat, chain: MessageChain) => any;
+type LifecycleHookListener<PieInstance> = (this: PieInstance) => any;
 
-type PieHookOptions = {
+type PieHookOptions<PieInstance> = {
     /**
      * pie消息监听器, 用以监听消息并处理
      * @param chat 当前聊天窗
@@ -151,22 +146,22 @@ type PieHookOptions = {
      *     await chat.send(chain);
      * }
      */
-    received?: MessageReceivedListener;
+    received?: MessageReceivedListener<PieInstance>;
 
     /** pie安装完成hook */
-    installed?: LifecycleHookListener;
+    installed?: LifecycleHookListener<PieInstance>;
 
     /** pie卸载完成hook */
-    uninstalled?: LifecycleHookListener;
+    uninstalled?: LifecycleHookListener<PieInstance>;
 
     /** pie启用hook */
-    enabled?: LifecycleHookListener;
+    enabled?: LifecycleHookListener<PieInstance>;
 
     /** pie禁用hook */
-    disabled?: LifecycleHookListener;
+    disabled?: LifecycleHookListener<PieInstance>;
 }
 
-type PieOptions<C extends ConfigMeta, D extends {}, M extends MethodsOption> = {
+type PieOptions<C extends ConfigMeta, D extends object, M extends PieMethodOptions<Pie<C, D, M>>> = {
         /** id(必须为合法标识符) */
         id: string;
         /** 名称 */
@@ -229,10 +224,10 @@ type PieOptions<C extends ConfigMeta, D extends {}, M extends MethodsOption> = {
          */
         filters?: PieFilter[];
     }
-    & PieHookOptions
+    & PieHookOptions<Pie<C, D, M>>
     & ThisType<Pie<C, D, M>>;
 
-export type Pie<C extends ConfigMeta = {}, D extends {} = {}, M extends MethodsOption = {}> =
+export type Pie<C extends ConfigMeta = {}, D extends object = object, M extends PieMethodOptions<Pie<C, D, M>> = {}> =
     {
         /** id */
         readonly id: string;
@@ -265,35 +260,35 @@ export type Pie<C extends ConfigMeta = {}, D extends {} = {}, M extends MethodsO
         /** 是否为 pie 标识, 恒为 true */
         readonly __isPie: true;
 
-        addListener(e: 'received', listener: MessageReceivedListener);
-        addListener(e: 'installed', listener: LifecycleHookListener);
-        addListener(e: 'uninstalled', listener: LifecycleHookListener);
-        addListener(e: 'enabled', listener: LifecycleHookListener);
-        addListener(e: 'disabled', listener: LifecycleHookListener);
+        addListener(e: 'received', listener: MessageReceivedListener<Pie<C, D, M>>);
+        addListener(e: 'installed', listener: LifecycleHookListener<Pie<C, D, M>>);
+        addListener(e: 'uninstalled', listener: LifecycleHookListener<Pie<C, D, M>>);
+        addListener(e: 'enabled', listener: LifecycleHookListener<Pie<C, D, M>>);
+        addListener(e: 'disabled', listener: LifecycleHookListener<Pie<C, D, M>>);
 
-        once(e: 'received', listener: MessageReceivedListener);
-        once(e: 'installed', listener: LifecycleHookListener);
-        once(e: 'uninstalled', listener: LifecycleHookListener);
-        once(e: 'enabled', listener: LifecycleHookListener);
-        once(e: 'disabled', listener: LifecycleHookListener);
+        once(e: 'received', listener: MessageReceivedListener<Pie<C, D, M>>);
+        once(e: 'installed', listener: LifecycleHookListener<Pie<C, D, M>>);
+        once(e: 'uninstalled', listener: LifecycleHookListener<Pie<C, D, M>>);
+        once(e: 'enabled', listener: LifecycleHookListener<Pie<C, D, M>>);
+        once(e: 'disabled', listener: LifecycleHookListener<Pie<C, D, M>>);
 
-        on(e: 'received', listener: MessageReceivedListener);
-        on(e: 'installed', listener: LifecycleHookListener);
-        on(e: 'uninstalled', listener: LifecycleHookListener);
-        on(e: 'enabled', listener: LifecycleHookListener);
-        on(e: 'disabled', listener: LifecycleHookListener);
+        on(e: 'received', listener: MessageReceivedListener<Pie<C, D, M>>);
+        on(e: 'installed', listener: LifecycleHookListener<Pie<C, D, M>>);
+        on(e: 'uninstalled', listener: LifecycleHookListener<Pie<C, D, M>>);
+        on(e: 'enabled', listener: LifecycleHookListener<Pie<C, D, M>>);
+        on(e: 'disabled', listener: LifecycleHookListener<Pie<C, D, M>>);
 
-        prependListener(e: 'received', listener: MessageReceivedListener);
-        prependListener(e: 'installed', listener: LifecycleHookListener);
-        prependListener(e: 'uninstalled', listener: LifecycleHookListener);
-        prependListener(e: 'enabled', listener: LifecycleHookListener);
-        prependListener(e: 'disabled', listener: LifecycleHookListener);
+        prependListener(e: 'received', listener: MessageReceivedListener<Pie<C, D, M>>);
+        prependListener(e: 'installed', listener: LifecycleHookListener<Pie<C, D, M>>);
+        prependListener(e: 'uninstalled', listener: LifecycleHookListener<Pie<C, D, M>>);
+        prependListener(e: 'enabled', listener: LifecycleHookListener<Pie<C, D, M>>);
+        prependListener(e: 'disabled', listener: LifecycleHookListener<Pie<C, D, M>>);
 
-        prependOnceListener(e: 'received', listener: MessageReceivedListener);
-        prependOnceListener(e: 'installed', listener: LifecycleHookListener);
-        prependOnceListener(e: 'uninstalled', listener: LifecycleHookListener);
-        prependOnceListener(e: 'enabled', listener: LifecycleHookListener);
-        prependOnceListener(e: 'disabled', listener: LifecycleHookListener);
+        prependOnceListener(e: 'received', listener: MessageReceivedListener<Pie<C, D, M>>);
+        prependOnceListener(e: 'installed', listener: LifecycleHookListener<Pie<C, D, M>>);
+        prependOnceListener(e: 'uninstalled', listener: LifecycleHookListener<Pie<C, D, M>>);
+        prependOnceListener(e: 'enabled', listener: LifecycleHookListener<Pie<C, D, M>>);
+        prependOnceListener(e: 'disabled', listener: LifecycleHookListener<Pie<C, D, M>>);
 
         emit(e: 'received', chat: Chat, chain: MessageChain);
         emit(e: 'installed');
@@ -301,11 +296,11 @@ export type Pie<C extends ConfigMeta = {}, D extends {} = {}, M extends MethodsO
         emit(e: 'enabled');
         emit(e: 'disabled');
 
-        listeners(e: 'received'): MessageReceivedListener[];
-        listeners(e: 'installed'): LifecycleHookListener[];
-        listeners(e: 'uninstalled'): LifecycleHookListener[];
-        listeners(e: 'enabled'): LifecycleHookListener[];
-        listeners(e: 'disabled'): LifecycleHookListener[];
+        listeners(e: 'received'): MessageReceivedListener<Pie<C, D, M>>[];
+        listeners(e: 'installed'): LifecycleHookListener<Pie<C, D, M>>[];
+        listeners(e: 'uninstalled'): LifecycleHookListener<Pie<C, D, M>>[];
+        listeners(e: 'enabled'): LifecycleHookListener<Pie<C, D, M>>[];
+        listeners(e: 'disabled'): LifecycleHookListener<Pie<C, D, M>>[];
     }
     & D & M
     & EventEmitter;
@@ -314,7 +309,7 @@ export type Pie<C extends ConfigMeta = {}, D extends {} = {}, M extends MethodsO
  * 创建 pie
  * @param options pie 选项
  */
-export function makePie<C extends ConfigMeta, D extends {}, M extends MethodsOption>(options: PieOptions<C, D, M>): Pie<C, D, M> {
+export function makePie<C extends ConfigMeta, D extends object, M extends PieMethodOptions<Pie<C, D, M>>>(options: PieOptions<C, D, M>): Pie<C, D, M> {
     const pie = Object.assign(new EventEmitter(), {
         ...(options.data || {}),
         ...(options.methods || {}),

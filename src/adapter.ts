@@ -26,11 +26,10 @@ import {
     UploadVoiceResponse,
     VerifyResponse
 } from './mirai';
-import {Pie} from './pie';
 
 type UploadType = 'friend' | 'group' | 'temp';
 
-type MiraiApiHttpAdapterMethodOptions = {
+type MiraiApiHttpAdapterApiMethodOptions = {
     /** 获取插件相关信息 */
     getAbout(): Promise<AboutResponse>;
 
@@ -350,25 +349,25 @@ type MiraiApiHttpAdapterMethodOptions = {
     stop();
 }
 
-type MiraiApiHttpAdapterHookOptions = {
+type MiraiApiHttpAdapterHookOptions<MiraiApiHttpAdapterInstance> = {
     /** adapter安装完成hook */
-    installed?: LifecycleHookListener;
+    installed?: LifecycleHookListener<MiraiApiHttpAdapterInstance>;
 
     /** adapter卸载完成hook */
-    uninstalled?: LifecycleHookListener;
+    uninstalled?: LifecycleHookListener<MiraiApiHttpAdapterInstance>;
 
     /** adapter选用hook */
-    used?: LifecycleHookListener;
+    used?: LifecycleHookListener<MiraiApiHttpAdapterInstance>;
 
     /** adapter弃用hook */
-    unused?: LifecycleHookListener;
+    unused?: LifecycleHookListener<MiraiApiHttpAdapterInstance>;
 }
 
-interface MethodsOption {
-    [key: string]: (this: Pie, ...args: any) => any;
-}
+type MiraiApiHttpAdapterMethodOptions<MiraiApiHttpAdapterInstance> = {
+    [key: string]: (this: MiraiApiHttpAdapterInstance, ...args: any) => any;
+};
 
-export type MiraiApiHttpAdapterOption<C extends ConfigMeta, D extends {}, M extends MethodsOption> =
+export type MiraiApiHttpAdapterOption<C extends ConfigMeta, D extends object, M extends MiraiApiHttpAdapterMethodOptions<MiraiApiHttpAdapter<C, D, M>>> =
     {
         /** adapter id */
         id: string;
@@ -385,15 +384,15 @@ export type MiraiApiHttpAdapterOption<C extends ConfigMeta, D extends {}, M exte
         /** adapter 额外方法 */
         methods?: M;
     }
-    & MiraiApiHttpAdapterHookOptions
-    & MiraiApiHttpAdapterMethodOptions
+    & MiraiApiHttpAdapterHookOptions<MiraiApiHttpAdapter<C, D, M>>
+    & MiraiApiHttpAdapterApiMethodOptions
     & ThisType<MiraiApiHttpAdapter<C, D, M>>;
 
-type MessageReceivedListener = (chatMessage: ChatMessage) => any;
-type EventReceivedListener = (event: Event) => any;
-type LifecycleHookListener = () => any;
+type MessageReceivedListener<MiraiApiHttpAdapterInstance> = (this: MiraiApiHttpAdapterInstance, chatMessage: ChatMessage) => any;
+type EventReceivedListener<MiraiApiHttpAdapterInstance> = (this: MiraiApiHttpAdapterInstance, event: Event) => any;
+type LifecycleHookListener<MiraiApiHttpAdapterInstance> = (this: MiraiApiHttpAdapterInstance) => any;
 
-export type MiraiApiHttpAdapter<C extends ConfigMeta = {}, D extends {} = {}, M extends MethodsOption = {}> =
+export type MiraiApiHttpAdapter<C extends ConfigMeta = {}, D extends object = object, M extends MiraiApiHttpAdapterMethodOptions<MiraiApiHttpAdapter<C, D, M>> = {}> =
     {
         /** adapter id */
         readonly id: string;
@@ -416,50 +415,50 @@ export type MiraiApiHttpAdapter<C extends ConfigMeta = {}, D extends {} = {}, M 
         /** 是否为 api adapter 标识, 恒为 true */
         readonly __isApiAdapter: true;
 
-        addListener(e: 'message', listener: MessageReceivedListener);
-        addListener(e: 'event', listener: EventReceivedListener);
-        addListener(e: 'used', listener: LifecycleHookListener);
-        addListener(e: 'unused', listener: LifecycleHookListener);
-        addListener(e: 'installed', listener: LifecycleHookListener);
-        addListener(e: 'uninstalled', listener: LifecycleHookListener);
-        addListener(e: 'listen', listener: LifecycleHookListener);
-        addListener(e: 'stop', listener: LifecycleHookListener);
+        addListener(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+        addListener(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+        addListener(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        addListener(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        addListener(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        addListener(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        addListener(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        addListener(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
 
-        once(e: 'message', listener: MessageReceivedListener);
-        once(e: 'event', listener: EventReceivedListener);
-        once(e: 'used', listener: LifecycleHookListener);
-        once(e: 'unused', listener: LifecycleHookListener);
-        once(e: 'installed', listener: LifecycleHookListener);
-        once(e: 'uninstalled', listener: LifecycleHookListener);
-        once(e: 'listen', listener: LifecycleHookListener);
-        once(e: 'stop', listener: LifecycleHookListener);
+        once(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+        once(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+        once(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        once(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        once(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        once(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        once(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        once(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
 
-        on(e: 'message', listener: MessageReceivedListener);
-        on(e: 'event', listener: EventReceivedListener);
-        on(e: 'used', listener: LifecycleHookListener);
-        on(e: 'unused', listener: LifecycleHookListener);
-        on(e: 'installed', listener: LifecycleHookListener);
-        on(e: 'uninstalled', listener: LifecycleHookListener);
-        on(e: 'listen', listener: LifecycleHookListener);
-        on(e: 'stop', listener: LifecycleHookListener);
+        on(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+        on(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+        on(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        on(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        on(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        on(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        on(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        on(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
 
-        prependListener(e: 'message', listener: MessageReceivedListener);
-        prependListener(e: 'event', listener: EventReceivedListener);
-        prependListener(e: 'used', listener: LifecycleHookListener);
-        prependListener(e: 'unused', listener: LifecycleHookListener);
-        prependListener(e: 'installed', listener: LifecycleHookListener);
-        prependListener(e: 'uninstalled', listener: LifecycleHookListener);
-        prependListener(e: 'listen', listener: LifecycleHookListener);
-        prependListener(e: 'stop', listener: LifecycleHookListener);
+        prependListener(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependListener(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependListener(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependListener(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependListener(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependListener(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependListener(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependListener(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
 
-        prependOnceListener(e: 'message', listener: MessageReceivedListener);
-        prependOnceListener(e: 'event', listener: EventReceivedListener);
-        prependOnceListener(e: 'used', listener: LifecycleHookListener);
-        prependOnceListener(e: 'unused', listener: LifecycleHookListener);
-        prependOnceListener(e: 'installed', listener: LifecycleHookListener);
-        prependOnceListener(e: 'uninstalled', listener: LifecycleHookListener);
-        prependOnceListener(e: 'listen', listener: LifecycleHookListener);
-        prependOnceListener(e: 'stop', listener: LifecycleHookListener);
+        prependOnceListener(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependOnceListener(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependOnceListener(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependOnceListener(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependOnceListener(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependOnceListener(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependOnceListener(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+        prependOnceListener(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
 
         emit(e: 'message', chatMessage: ChatMessage);
         emit(e: 'event', event: Event);
@@ -470,25 +469,34 @@ export type MiraiApiHttpAdapter<C extends ConfigMeta = {}, D extends {} = {}, M 
         emit(e: 'listen');
         emit(e: 'stop');
 
-        listeners(e: 'message'): MessageReceivedListener[];
-        listeners(e: 'event'): EventReceivedListener[];
-        listeners(e: 'used'): LifecycleHookListener[];
-        listeners(e: 'unused'): LifecycleHookListener[];
-        listeners(e: 'installed'): LifecycleHookListener[];
-        listeners(e: 'uninstalled'): LifecycleHookListener[];
-        listeners(e: 'listen'): LifecycleHookListener[];
-        listeners(e: 'stop'): LifecycleHookListener[];
+        listeners(e: 'message'): MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>[];
+        listeners(e: 'event'): EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>[];
+        listeners(e: 'used'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
+        listeners(e: 'unused'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
+        listeners(e: 'installed'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
+        listeners(e: 'uninstalled'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
+        listeners(e: 'listen'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
+        listeners(e: 'stop'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
     }
     & D & M
-    & Readonly<MiraiApiHttpAdapterMethodOptions>
+    & Readonly<MiraiApiHttpAdapterApiMethodOptions>
     & EventEmitter;
 
 /**
  * 创建 api adapter
  * @param options adapter 选项
  */
-export function makeApiAdapter<C extends ConfigMeta, D extends {}, M extends MethodsOption>(options: MiraiApiHttpAdapterOption<C, D, M>): MiraiApiHttpAdapter<C, D, M> {
-    const {data = {}, methods = {}, configMeta = {}, installed = undefined, uninstalled = undefined, used = undefined, unused = undefined, ...rest} = options;
+export function makeApiAdapter<C extends ConfigMeta, D extends object, M extends MiraiApiHttpAdapterMethodOptions<MiraiApiHttpAdapter<C, D, M>>>(options: MiraiApiHttpAdapterOption<C, D, M>): MiraiApiHttpAdapter<C, D, M> {
+    const {
+        data = {},
+        methods = {},
+        configMeta = {},
+        installed = undefined,
+        uninstalled = undefined,
+        used = undefined,
+        unused = undefined,
+        ...rest
+    } = options;
 
     const adapter = Object.assign(new EventEmitter(), {
         ...data,

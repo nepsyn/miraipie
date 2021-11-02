@@ -7,7 +7,7 @@ import log4js from 'log4js';
 import path from 'path';
 import MixedApiAdapter from './builtin/MixedApiAdapter';
 import {ApplicationConfig, ConfigMeta} from './config';
-import createApp, {MiraiApiHttpAdapter, Pie, Mirai} from './miraipie';
+import createApp, {Mirai, MiraiApiHttpAdapter, Pie} from './miraipie';
 import {makeTemplate} from './utils';
 
 log4js.configure({

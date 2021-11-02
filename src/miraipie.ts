@@ -20,6 +20,18 @@ export class MiraiPieApplication extends EventEmitter {
 
     /** logger */
     logger: Logger = getLogger('miraipie');
+    /** 机器人服务的QQ号 */
+    readonly qq: number;
+    /** 用于与 mirai-api-http 对接的客户端 adapter */
+    api: MiraiApiHttpAdapter;
+    /** 可用的 mirai-api-http 客户端 adapter 映射 */
+    private __apiAdapterMap: Map<string, MiraiApiHttpAdapter>;
+
+    /** 已安装的 pie 映射 */
+    private __piesMap: Map<string, Pie>;
+
+    /** pie 启用状态映射 */
+    private __piesEnabledMap: Map<string, boolean>;
 
     private constructor(private config: ApplicationConfig) {
         super();
@@ -127,46 +139,11 @@ export class MiraiPieApplication extends EventEmitter {
         return new MiraiPieApplication(appConfigs);
     }
 
-    /** 可用的 mirai-api-http 客户端 adapter 映射 */
-    private __apiAdapterMap: Map<string, MiraiApiHttpAdapter>;
-
-    /** 已安装的 pie 映射 */
-    private __piesMap: Map<string, Pie>;
-
-    /** pie 启用状态映射 */
-    private __piesEnabledMap: Map<string, boolean>;
-
-    /** 机器人服务的QQ号 */
-    readonly qq: number;
-
-    /** 用于与 mirai-api-http 对接的客户端 adapter */
-    api: MiraiApiHttpAdapter;
-
-    /** 用于 pie 的消息分发器 */
-    private async __messageDispatcher(chatMessage: ChatMessage) {
-        let chat: Chat = null;
-        if (chatMessage.type === 'FriendMessage') chat = new FriendChat(chatMessage.sender as Friend);
-        else if (chatMessage.type === 'GroupMessage') chat = new GroupChat(chatMessage.sender as GroupMember);
-        else if (chatMessage.type === 'TempMessage') chat = new TempChat(chatMessage.sender as GroupMember);
-        else return;
-
-        chat = makeReadonly(chat);
-        const chain = makeReadonly(MessageChain.from(chatMessage.messageChain));
-
-        for (const [id, enabled] of this.__piesEnabledMap.entries()) {
-            if (enabled) {
-                const pie = this.__piesMap.get(id);
-                if (pie.filters.map((filter) => filter.handler(chat, chain, pie)).some((v) => !v)) continue;
-                pie.emit('received', chat, chain);
-            }
-        }
-    }
-
     /**
      * 安装拓展
      * @param extension 拓展对象, 可以为 adapter 和 pie
      */
-    install(extension: MiraiApiHttpAdapter | Pie): this {
+    install<Instance extends Pie | MiraiApiHttpAdapter>(extension: Instance): this {
         if ((extension as Pie).__isPie) this.pie(extension as Pie);
         else if ((extension as MiraiApiHttpAdapter).__isApiAdapter) this.adapter(extension as MiraiApiHttpAdapter);
         else this.logger.error(`未知的拓展类型: ${extension}`);
@@ -177,7 +154,7 @@ export class MiraiPieApplication extends EventEmitter {
      * 安装 adapter
      * @param adapter adapter 对象
      */
-    adapter(adapter: MiraiApiHttpAdapter): this {
+    adapter<MiraiApiHttpAdapterInstance extends MiraiApiHttpAdapter>(adapter: MiraiApiHttpAdapterInstance): this {
         if (!adapter.__isApiAdapter) {
             this.logger.error(`安装 adapter 失败, ${adapter} 不是有效的 adapter`);
             return this;
@@ -257,7 +234,7 @@ export class MiraiPieApplication extends EventEmitter {
      * 安装 pie
      * @param pie pie 对象
      */
-    pie(pie: Pie): this {
+    pie<PieInstance extends Pie>(pie: PieInstance): this {
         if (!pie.__isPie) {
             this.logger.error(`安装 pie 失败, ${pie} 不是有效的 pie`);
             return this;
@@ -340,73 +317,135 @@ export class MiraiPieApplication extends EventEmitter {
     }
 
     addListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
+
     addListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+
     addListener(e: 'event', listener: EventReceivedListener<Event>): this;
+
     addListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
+
     addListener(e: 'listen', listener: LifecycleHookListener): this;
+
     addListener(e: 'stop', listener: LifecycleHookListener): this;
+
     addListener(event, listener): this {
         return super.addListener(event, listener);
     }
 
-    once(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
-    once<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
-    once(e: 'event', listener: EventReceivedListener<Event>): this;
-    once<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
-    once(e: 'listen', listener: LifecycleHookListener): this;
-    once(e: 'stop', listener: LifecycleHookListener): this;
-    once(event, listener): this {
-        return super.once(event, listener);
-    }
-
     on(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
+
     on<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+
     on(e: 'event', listener: EventReceivedListener<Event>): this;
+
     on<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
+
     on(e: 'listen', listener: LifecycleHookListener): this;
+
     on(e: 'stop', listener: LifecycleHookListener): this;
+
     on(event, listener): this {
         return super.on(event, listener);
     }
 
+    once(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
+
+    once<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+
+    once(e: 'event', listener: EventReceivedListener<Event>): this;
+
+    once<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
+
+    once(e: 'listen', listener: LifecycleHookListener): this;
+
+    once(e: 'stop', listener: LifecycleHookListener): this;
+
+    once(event, listener): this {
+        return super.once(event, listener);
+    }
+
+    listeners(e: 'message'): MessageReceivedListener<ChatMessage>[];
+
+    listeners<T extends ChatMessageType>(e: T): MessageReceivedListener<ChatMessageMap[T]>[];
+
+    listeners(e: 'event'): EventReceivedListener<Event>[];
+
+    listeners<T extends EventType>(e: T): EventReceivedListener<EventMap[T]>[];
+
+    listeners(e: 'listen'): LifecycleHookListener[];
+
+    listeners(e: 'stop'): LifecycleHookListener[];
+
+    listeners(event) {
+        return super.listeners(event);
+    }
+
+    emit(e: 'message', chatMessage: ChatMessage);
+
+    emit(e: ChatMessageType, chatMessage: ChatMessage);
+
+    emit(e: 'event', event: Event);
+
+    emit(e: EventType, event: Event);
+
+    emit(e: 'listen');
+
+    emit(e: 'stop');
+
+    emit(event, ...args) {
+        return super.emit(event, ...args);
+    }
+
     prependListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
+
     prependListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+
     prependListener(e: 'event', listener: EventReceivedListener<Event>): this;
+
     prependListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
+
     prependListener(e: 'listen', listener: LifecycleHookListener): this;
+
     prependListener(e: 'stop', listener: LifecycleHookListener): this;
+
     prependListener(event, listener): this {
         return super.prependListener(event, listener);
     }
 
     prependOnceListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
+
     prependOnceListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+
     prependOnceListener(e: 'event', listener: EventReceivedListener<Event>): this;
+
     prependOnceListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
+
     prependOnceListener(e: 'listen', listener: LifecycleHookListener): this;
+
     prependOnceListener(e: 'stop', listener: LifecycleHookListener): this;
+
     prependOnceListener(event, listener): this {
         return super.prependOnceListener(event, listener);
     }
 
-    emit(e: 'message', chatMessage: ChatMessage);
-    emit(e: ChatMessageType, chatMessage: ChatMessage);
-    emit(e: 'event', event: Event);
-    emit(e: EventType, event: Event);
-    emit(e: 'listen');
-    emit(e: 'stop');
-    emit(event, ...args) {
-        return super.emit(event, ...args);
-    }
+    /** 用于 pie 的消息分发器 */
+    private async __messageDispatcher(chatMessage: ChatMessage) {
+        let chat: Chat = null;
+        if (chatMessage.type === 'FriendMessage') chat = new FriendChat(chatMessage.sender as Friend);
+        else if (chatMessage.type === 'GroupMessage') chat = new GroupChat(chatMessage.sender as GroupMember);
+        else if (chatMessage.type === 'TempMessage') chat = new TempChat(chatMessage.sender as GroupMember);
+        else return;
 
-    listeners(e: 'message'): MessageReceivedListener<ChatMessage>[];
-    listeners<T extends ChatMessageType>(e: T): MessageReceivedListener<ChatMessageMap[T]>[];
-    listeners(e: 'event'): EventReceivedListener<Event>[];
-    listeners<T extends EventType>(e: T): EventReceivedListener<EventMap[T]>[];
-    listeners(e: 'listen'): LifecycleHookListener[];
-    listeners(e: 'stop'): LifecycleHookListener[];
-    listeners(event) {
-        return super.listeners(event);
+        chat = makeReadonly(chat);
+        const chain = makeReadonly(MessageChain.from(chatMessage.messageChain));
+
+        for (const [id, enabled] of this.__piesEnabledMap.entries()) {
+            if (enabled) {
+                const pie = this.__piesMap.get(id);
+                if (pie.filters.map((filter) => filter.handler(chat, chain, pie)).some((v) => !v)) continue;
+                pie.emit('received', chat, chain);
+            }
+        }
     }
 }
 

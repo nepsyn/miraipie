@@ -6,7 +6,7 @@ miraipie **不支持** IE8 及以下版本。理论上支持 ECMAScript 5 语法
 
 #### 更新日志
 
-最新稳定版本： 1.2.3
+<p class="version-text">最新稳定版本： <img alt="version tag" src="https://img.shields.io/npm/v/miraipie" ></p>
 
 详细的更新日志见 [Github](https://github.com/nepsyn/miraipie/blob/master/CHANGELOG.md)
 

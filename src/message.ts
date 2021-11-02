@@ -88,22 +88,6 @@ export class MessageChain<T extends SingleMessage = SingleMessage> extends Array
     }
 
     /**
-     * 使用单一消息数组构造消息链
-     * @param messageList 单一消息数组
-     * @return 消息链
-     * @example
-     * // MessageChain(1) [{type: 'Plain', text: 'Hello World!'}]
-     * MessageChain.from([Plain('Hello World!')]);
-     * // MessageChain(2) [{type: 'AtAll'}, {type: 'Plain', text: 'Hello World!'}]
-     * MessageChain.from([AtAll(), Plain('Hello World!')]);
-     */
-    static from(messageList: SingleMessage[]): MessageChain {
-        const chain = new MessageChain();
-        chain.push(...messageList.map((message) => ({...message, isType, toDisplayString, toMiraiCode})));
-        return chain;
-    }
-
-    /**
      * 获取消息链中第一个有效消息, 如果没有将返回null
      * @return 第一个有效消息
      * @example
@@ -238,6 +222,22 @@ export class MessageChain<T extends SingleMessage = SingleMessage> extends Array
      */
     toDisplayString(): string {
         return this.dropped('Source').map((message) => message.toDisplayString()).join('');
+    }
+
+    /**
+     * 使用单一消息数组构造消息链
+     * @param messageList 单一消息数组
+     * @return 消息链
+     * @example
+     * // MessageChain(1) [{type: 'Plain', text: 'Hello World!'}]
+     * MessageChain.from([Plain('Hello World!')]);
+     * // MessageChain(2) [{type: 'AtAll'}, {type: 'Plain', text: 'Hello World!'}]
+     * MessageChain.from([AtAll(), Plain('Hello World!')]);
+     */
+    static from(messageList: SingleMessage[]): MessageChain {
+        const chain = new MessageChain();
+        chain.push(...messageList.map((message) => ({...message, isType, toDisplayString, toMiraiCode})));
+        return chain;
     }
 }
 
