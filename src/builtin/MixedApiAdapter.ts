@@ -182,7 +182,7 @@ const MixedApiAdapter = makeApiAdapter({
     async getFriendProfile(friendId: number) {
         return this.get('friendProfile', {target: friendId});
     },
-    async getMemberProfile(groupId: number, memberId: number) {
+    async getMemberProfile(memberId: number, groupId: number) {
         return this.get('memberProfile', {target: groupId, memberId});
     },
     async sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId?: number) {
@@ -290,6 +290,12 @@ const MixedApiAdapter = makeApiAdapter({
     },
     async setMemberAdmin(memberId: number, groupId: number, admin: boolean = true) {
         return this.post('memberAdmin', {target: groupId, memberId, assign: admin});
+    },
+    async executeCommand(command: SingleMessage[]) {
+        return this.post('cmd/execute', {command});
+    },
+    async registerCommand(name: string, alias: string[], usage: string, description: string) {
+        return this.post('cmd/register', {name, alias, usage, description});
     },
     async handleNewFriendRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string) {
         return this.post('resp/newFriendRequestEvent', {eventId, fromId, groupId, operate, message});

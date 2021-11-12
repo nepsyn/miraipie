@@ -181,7 +181,7 @@ const HttpApiAdapter = makeApiAdapter({
     async getFriendProfile(friendId: number) {
         return this.get('friendProfile', {target: friendId});
     },
-    async getMemberProfile(groupId: number, memberId: number) {
+    async getMemberProfile(memberId: number, groupId: number) {
         return this.get('memberProfile', {target: groupId, memberId});
     },
     async sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId?: number) {
@@ -304,6 +304,12 @@ const HttpApiAdapter = makeApiAdapter({
             operate,
             message
         });
+    },
+    async executeCommand(command: SingleMessage[]) {
+        return this.post('cmd/execute', {command});
+    },
+    async registerCommand(name: string, alias: string[], usage: string, description: string) {
+        return this.post('cmd/register', {name, alias, usage, description});
     },
     async uploadImage(uploadType: UploadType, imageData: ReadStream) {
         const data = new FormData();

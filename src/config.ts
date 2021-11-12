@@ -80,13 +80,13 @@ export interface ApplicationConfig {
     qq: number;
 
     /** 当前选用的 adapter */
-    adapterInUse: string;
+    adapterInUse: 'http' | 'ws' | 'mixed' | string;
 
     /** 日志存放文件夹, null 时不写入日志 */
     logDirectory: string;
 
     /** 日志级别 */
-    logLevel: string;
+    logLevel: 'debug' | 'info' | 'error' | string;
 
     /** 是否打印接收到的消息和事件 */
     verbose: boolean;
@@ -106,13 +106,13 @@ export class ApplicationConfig {
     qq: number;
 
     /** 当前选用的 adapter */
-    adapterInUse: string;
+    adapterInUse: 'http' | 'ws' | 'mixed' | string;
 
     /** 日志存放文件夹, null 时不写入日志 */
     logDirectory: string;
 
     /** 日志级别 */
-    logLevel: string;
+    logLevel: 'debug' | 'info' | 'error' | string;
 
     /** 是否打印接收到的消息和事件 */
     verbose: boolean;
@@ -130,7 +130,7 @@ export class ApplicationConfig {
         if (!config.qq) throw Error('配置文件缺少服务qq号');
         return {
             qq: config.qq,
-            adapterInUse: config.adapterInUse || null,
+            adapterInUse: config.adapterInUse || 'http',
             logDirectory: config.logDirectory || null,
             logLevel: config.logLevel || 'debug',
             verbose: config.verbose || false,

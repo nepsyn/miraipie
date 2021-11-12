@@ -168,7 +168,7 @@ const WebsocketApiAdapter = makeApiAdapter({
     async getFriendProfile(friendId: number) {
         return await this.request('friendProfile', {target: friendId});
     },
-    async getMemberProfile(groupId: number, memberId: number) {
+    async getMemberProfile(memberId: number, groupId: number) {
         return await this.request('memberProfile', {target: groupId, memberId});
     },
     async sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId?: number) {
@@ -274,6 +274,12 @@ const WebsocketApiAdapter = makeApiAdapter({
     },
     async setMemberAdmin(memberId: number, groupId: number, admin: boolean = true) {
         return await this.request('memberAdmin', {target: groupId, memberId, assign: admin});
+    },
+    async executeCommand(command: SingleMessage[]) {
+        return this.request('cmd_execute', {command});
+    },
+    async registerCommand(name: string, alias: string[], usage: string, description: string) {
+        return this.request('cmd_register', {name, alias, usage, description});
     },
     async handleNewFriendRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string) {
         return await this.request('resp_newFriendRequestEvent', {eventId, fromId, groupId, operate, message});

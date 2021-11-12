@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.7
+
+- 修复 `getMemberProfile` 参数提示错误的问题。
+- 优化 部分类型注释。
+- 添加 `regitserCommand` 和 `executeCommand` 方法用于 mirai-console 交互。
+
 ## v1.2.6
 
 - 优化 部分编辑器类型补全提示。
