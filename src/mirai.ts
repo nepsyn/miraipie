@@ -1055,7 +1055,7 @@ export interface MemberHonorChangeEvent extends MemberEvent {
     /** 称号变化行为(achieve - 获得称号, lose - 失去称号) */
     action: string;
     /** 称号 */
-    honor: string;
+    honor: 'achieve' | 'lose';
 }
 
 /** 添加好友申请事件 */

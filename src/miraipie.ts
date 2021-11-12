@@ -317,79 +317,50 @@ export class MiraiPieApplication extends EventEmitter {
     }
 
     addListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
-
     addListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
-
     addListener(e: 'event', listener: EventReceivedListener<Event>): this;
-
     addListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
-
     addListener(e: 'listen', listener: LifecycleHookListener): this;
-
     addListener(e: 'stop', listener: LifecycleHookListener): this;
-
     addListener(event, listener): this {
         return super.addListener(event, listener);
     }
 
     on(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
-
     on<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
-
     on(e: 'event', listener: EventReceivedListener<Event>): this;
-
     on<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
-
     on(e: 'listen', listener: LifecycleHookListener): this;
-
     on(e: 'stop', listener: LifecycleHookListener): this;
-
     on(event, listener): this {
         return super.on(event, listener);
     }
 
     once(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
-
     once<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
-
     once(e: 'event', listener: EventReceivedListener<Event>): this;
-
     once<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
-
     once(e: 'listen', listener: LifecycleHookListener): this;
-
     once(e: 'stop', listener: LifecycleHookListener): this;
-
     once(event, listener): this {
         return super.once(event, listener);
     }
 
     listeners(e: 'message'): MessageReceivedListener<ChatMessage>[];
-
     listeners<T extends ChatMessageType>(e: T): MessageReceivedListener<ChatMessageMap[T]>[];
-
     listeners(e: 'event'): EventReceivedListener<Event>[];
-
     listeners<T extends EventType>(e: T): EventReceivedListener<EventMap[T]>[];
-
     listeners(e: 'listen'): LifecycleHookListener[];
-
     listeners(e: 'stop'): LifecycleHookListener[];
-
     listeners(event) {
         return super.listeners(event);
     }
 
     emit(e: 'message', chatMessage: ChatMessage);
-
     emit(e: ChatMessageType, chatMessage: ChatMessage);
-
     emit(e: 'event', event: Event);
-
     emit(e: EventType, event: Event);
-
     emit(e: 'listen');
-
     emit(e: 'stop');
 
     emit(event, ...args) {
@@ -397,33 +368,21 @@ export class MiraiPieApplication extends EventEmitter {
     }
 
     prependListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
-
     prependListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
-
     prependListener(e: 'event', listener: EventReceivedListener<Event>): this;
-
     prependListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
-
     prependListener(e: 'listen', listener: LifecycleHookListener): this;
-
     prependListener(e: 'stop', listener: LifecycleHookListener): this;
-
     prependListener(event, listener): this {
         return super.prependListener(event, listener);
     }
 
     prependOnceListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
-
     prependOnceListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
-
     prependOnceListener(e: 'event', listener: EventReceivedListener<Event>): this;
-
     prependOnceListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
-
     prependOnceListener(e: 'listen', listener: LifecycleHookListener): this;
-
     prependOnceListener(e: 'stop', listener: LifecycleHookListener): this;
-
     prependOnceListener(event, listener): this {
         return super.prependOnceListener(event, listener);
     }
