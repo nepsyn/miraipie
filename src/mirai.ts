@@ -1446,4 +1446,4 @@ export interface UploadVoiceResponse {
 export type UploadFileResponse = FileInfoResponse;
 
 /** 支持的 mirai-api-http 版本号 */
-export const MIRAI_API_HTTP_VERSION = '2.3.3';
+export const MIRAI_API_HTTP_VERSION = '2.4.0';

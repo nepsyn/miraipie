@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.8
+
+- 添加 创建应用时添加参数 `loggerOptions` 用于自定义 log4js 配置。
+- 适配 mirai-api-http v2.4.0。
+
 ## v1.2.7
 
 - 修复 `getMemberProfile` 参数提示错误的问题。

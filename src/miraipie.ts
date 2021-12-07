@@ -1,13 +1,13 @@
 import EventEmitter from 'events';
-import {configure, getLogger, Logger} from 'log4js';
+import { Configuration, configure, getLogger, Logger } from 'log4js';
 import path from 'path';
-import {MiraiApiHttpAdapter} from './adapter';
-import {Chat, FriendChat, GroupChat, TempChat} from './chat';
-import {ApplicationConfig, checkUserConfig} from './config';
-import {MessageChain} from './message';
-import {ChatMessage, ChatMessageMap, ChatMessageType, Event, EventMap, EventType, Friend, GroupMember} from './mirai';
-import {Pie} from './pie';
-import {makeReadonly} from './utils';
+import { MiraiApiHttpAdapter } from './adapter';
+import { Chat, FriendChat, GroupChat, TempChat } from './chat';
+import { ApplicationConfig, checkUserConfig } from './config';
+import { MessageChain } from './message';
+import { ChatMessage, ChatMessageMap, ChatMessageType, Event, EventMap, EventType, Friend, GroupMember } from './mirai';
+import { Pie } from './pie';
+import { makeReadonly } from './utils';
 
 type MessageReceivedListener<T extends ChatMessage> = (chatMessage: T) => any;
 type EventReceivedListener<T extends Event> = (event: T) => any;
@@ -33,7 +33,7 @@ export class MiraiPieApplication extends EventEmitter {
     /** pie 启用状态映射 */
     private __piesEnabledMap: Map<string, boolean>;
 
-    private constructor(private config: ApplicationConfig) {
+    private constructor(private config: ApplicationConfig, loggerOptions?: Configuration) {
         super();
         MiraiPieApplication.instance = this;
 
@@ -43,7 +43,7 @@ export class MiraiPieApplication extends EventEmitter {
         this.qq = config.qq;
 
         // 初始化log4js
-        configure({
+        configure(loggerOptions || {
             appenders: {
                 console: {
                     type: 'console'
@@ -134,9 +134,10 @@ export class MiraiPieApplication extends EventEmitter {
     /**
      * 创建 MiraiPie 应用程序实例
      * @param appConfigs 应用程序配置
+     * @param loggerOptions log4js实例配置
      */
-    static createApp(appConfigs: ApplicationConfig): MiraiPieApplication {
-        return new MiraiPieApplication(appConfigs);
+    static createApp(appConfigs: ApplicationConfig, loggerOptions?: Configuration): MiraiPieApplication {
+        return new MiraiPieApplication(appConfigs, loggerOptions);
     }
 
     /**
