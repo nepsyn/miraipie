@@ -40,6 +40,10 @@ export interface GroupMember extends Contact {
     /** 所在群聊 */
     group: Group;
 }
+export interface GroupMemberSettings{
+    name: string;
+    specialTitle: string;
+}
 
 /** 平台类型 */
 export type PlatformType = 'IOS' | 'MOBILE' | 'WINDOWS';

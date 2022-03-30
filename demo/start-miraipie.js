@@ -1,4 +1,4 @@
-const {createApp, ApplicationConfig} = require('miraipie');
+const {createApp, ApplicationConfig} = require('../lib/miraipie');
 const config = require('./miraipie.json');
 
 // const app = createApp(ApplicationConfig.make({

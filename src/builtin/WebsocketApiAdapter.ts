@@ -5,7 +5,7 @@ import {
     ChatMessage,
     Event,
     GroupConfig,
-    GroupMember,
+    GroupMemberSettings,
     MIRAI_API_HTTP_VERSION,
     NudgeKind,
     ResponseCode,
@@ -269,7 +269,7 @@ const WebsocketApiAdapter = makeApiAdapter({
     async getMemberInfo(memberId: number, groupId: number) {
         return await this.request('memberInfo', {target: groupId, memberId}, 'get');
     },
-    async setMemberInfo(memberId: number, groupId: number, info: GroupMember) {
+    async setMemberInfo(memberId: number, groupId: number, info: GroupMemberSettings) {
         return await this.request('memberInfo', {target: groupId, memberId, info}, 'update');
     },
     async setMemberAdmin(memberId: number, groupId: number, admin: boolean = true) {

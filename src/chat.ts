@@ -5,6 +5,7 @@ import {
     Group,
     GroupConfig,
     GroupMember,
+    GroupMemberSettings,
     GroupPermission,
     Profile,
     ResponseCode,
@@ -316,7 +317,7 @@ export class GroupChat extends Chat {
      * @param memberId 成员QQ号(默认为当前消息发送人)
      * @return 是否修改成功
      */
-    async setInfo(info: GroupMember, memberId?: number): Promise<boolean> {
+    async setInfo(info: GroupMemberSettings, memberId?: number): Promise<boolean> {
         const resp = await MiraiPieApplication.instance.api.setMemberInfo(memberId || this.sender.id, this.contact.id, info);
         return resp?.code === ResponseCode.Success;
     }
