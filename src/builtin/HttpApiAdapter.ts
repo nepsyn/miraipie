@@ -1,18 +1,20 @@
-import axios, {AxiosRequestConfig} from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import FormData from 'form-data';
-import {ReadStream} from 'fs';
-import {makeApiAdapter} from '../adapter';
+import { ReadStream } from 'fs';
+import { makeApiAdapter } from '../adapter';
 import {
     ChatMessage,
     Event,
     GroupConfig,
-    GroupMemberSettings,
+    GroupMemberInfo,
     MIRAI_API_HTTP_VERSION,
     NudgeKind,
+    PostGroupAnnouncement,
     ResponseCode,
-    SingleMessage
+    SingleMessage,
+    SyncMessage,
 } from '../mirai';
-import {sleep} from '../utils';
+import { sleep } from '../utils';
 
 type UploadType = 'friend' | 'group' | 'temp';
 
@@ -26,7 +28,7 @@ const HttpApiAdapter = makeApiAdapter({
     configMeta: {
         qq: {
             type: Number,
-            description: 'mirai-api-http服务的QQ号'
+            description: 'mirai-api-http服务的QQ号',
         },
         verifyKey: {
             type: String,
@@ -37,27 +39,27 @@ const HttpApiAdapter = makeApiAdapter({
             type: String,
             required: true,
             description: 'mirai-api-http服务的主机地址',
-            default: () => '127.0.0.1'
+            default: () => '127.0.0.1',
         },
         port: {
             type: Number,
             required: true,
             description: 'mirai-api-http服务的端口号',
-            default: () => 23333
+            default: () => 23333,
         },
         interval: {
             type: Number,
             description: 'http轮询周期(毫秒)',
-            default: () => 500
+            default: () => 500,
         },
         ssl: {
             type: Boolean,
             description: '是否使用SSL',
-            default: () => false
-        }
+            default: () => false,
+        },
     },
     data: {
-        session: null
+        session: null,
     },
     methods: {
         async request<T>(uri: string, data: object, method: 'GET' | 'POST', requireSession: boolean = true, multipart: boolean = false): Promise<T> {
@@ -65,7 +67,7 @@ const HttpApiAdapter = makeApiAdapter({
             const config: AxiosRequestConfig = {
                 method,
                 url: `http${this.configs.ssl ? 's' : ''}://${this.configs.host}:${this.configs.port}/${uri}`,
-                headers: {}
+                headers: {},
             };
 
             // 判断请求类型
@@ -98,7 +100,7 @@ const HttpApiAdapter = makeApiAdapter({
         },
         async post<T>(uri: string, data?: object, requireSession: boolean = true, multipart: boolean = false): Promise<T> {
             return this.request(uri, data, 'POST', requireSession, multipart);
-        }
+        },
     },
     async verify() {
         return new Promise((resolve, reject) => {
@@ -138,6 +140,7 @@ const HttpApiAdapter = makeApiAdapter({
                         }
                         for (const i of resp.data) {
                             if (i.type.endsWith('Message')) this.emit('message', i as ChatMessage);
+                            else if (i.type.endsWith('SyncMessage')) this.emit('sync', i as SyncMessage);
                             else this.emit('event', i as Event);
                         }
                         await sleep(this.configs.interval);
@@ -184,18 +187,21 @@ const HttpApiAdapter = makeApiAdapter({
     async getMemberProfile(memberId: number, groupId: number) {
         return this.get('memberProfile', {target: groupId, memberId});
     },
+    async getUserProfile(userId: number) {
+        return this.get('userProfile', {target: userId});
+    },
     async sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId?: number) {
         return this.post('sendFriendMessage', {
             target: friendId,
             messageChain,
-            quote: quoteMessageId
+            quote: quoteMessageId,
         });
     },
     async sendGroupMessage(groupId: number, messageChain: SingleMessage[], quoteMessageId?: number) {
         return this.post('sendGroupMessage', {
             target: groupId,
             messageChain,
-            quote: quoteMessageId
+            quote: quoteMessageId,
         });
     },
     async sendTempMessage(memberId: number, groupId: number, messageChain: SingleMessage[], quoteMessageId?: number) {
@@ -203,7 +209,7 @@ const HttpApiAdapter = makeApiAdapter({
             qq: memberId,
             group: groupId,
             messageChain,
-            quote: quoteMessageId
+            quote: quoteMessageId,
         });
     },
     async sendNudge(targetId: number, subjectId: number, kind: NudgeKind) {
@@ -220,7 +226,7 @@ const HttpApiAdapter = makeApiAdapter({
             qq: friendId,
             offset,
             size,
-            withDownloadInfo
+            withDownloadInfo,
         });
     },
     async getFileInfo(fileId: string, path: string, groupId: number, friendId: number, withDownloadInfo: boolean = true) {
@@ -232,7 +238,7 @@ const HttpApiAdapter = makeApiAdapter({
             path: parentDirectoryPath,
             group: groupId,
             qq: friendId,
-            directoryName
+            directoryName,
         });
     },
     async deleteFile(id: string, path: string, groupId: number, friendId: number) {
@@ -245,7 +251,7 @@ const HttpApiAdapter = makeApiAdapter({
             group: groupId,
             qq: friendId,
             moveTo: moveToDirectoryId,
-            moveToPath: moveToDirectoryPath
+            moveToPath: moveToDirectoryPath,
         });
     },
     async renameFile(id: string, path: string, groupId: number, friendId: number, name: string) {
@@ -279,16 +285,25 @@ const HttpApiAdapter = makeApiAdapter({
         return this.get('groupConfig', {target: groupId});
     },
     async setGroupConfig(groupId: number, config: GroupConfig) {
-        return this.post('groupConfig', {target: groupId, config})
+        return this.post('groupConfig', {target: groupId, config});
     },
     async getMemberInfo(memberId: number, groupId: number) {
         return this.get('memberInfo', {target: groupId, memberId});
     },
-    async setMemberInfo(memberId: number, groupId: number, info: GroupMemberSettings) {
+    async setMemberInfo(memberId: number, groupId: number, info: GroupMemberInfo) {
         return this.post('memberInfo', {target: groupId, memberId, info});
     },
     async setMemberAdmin(memberId: number, groupId: number, admin: boolean = true) {
         return this.post('memberAdmin', {target: groupId, memberId, assign: admin});
+    },
+    async getGroupAnnouncements(groupId: number, offset: number, size: number) {
+        return this.get('anno/list', {id: groupId, offset, size});
+    },
+    async postGroupAnnouncement(groupId: number, announcement: PostGroupAnnouncement) {
+        return this.post('anno/publish', {target: groupId, ...announcement});
+    },
+    async deleteGroupAnnouncement(groupId: number, announcementId: number) {
+        return this.post('anno/delete', {id: groupId, fid: announcementId});
     },
     async handleNewFriendRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string) {
         return this.post('resp/newFriendRequestEvent', {eventId, fromId, groupId, operate, message});
@@ -302,7 +317,7 @@ const HttpApiAdapter = makeApiAdapter({
             fromId,
             groupId,
             operate,
-            message
+            message,
         });
     },
     async executeCommand(command: SingleMessage[]) {
@@ -329,7 +344,7 @@ const HttpApiAdapter = makeApiAdapter({
         data.append('path', path);
         data.append('file', fileData);
         return this.post('uploadFile', data, true, true);
-    }
+    },
 });
 
 export = HttpApiAdapter;

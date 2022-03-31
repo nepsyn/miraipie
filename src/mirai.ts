@@ -40,8 +40,12 @@ export interface GroupMember extends Contact {
     /** 所在群聊 */
     group: Group;
 }
-export interface GroupMemberSettings{
+
+/** 群成员设置信息 */
+export interface GroupMemberInfo {
+    /** 群成员昵称 */
     name: string;
+    /** 特殊称号 */
     specialTitle: string;
 }
 
@@ -724,6 +728,15 @@ export interface File extends SingleMessage {
     size: number;
 }
 
+/** 商店表情型 */
+export interface MarketFace extends SingleMessage {
+    type: 'MarketFace';
+    /** 表情id */
+    id: number;
+    /** 表情名称 */
+    name: string;
+}
+
 /** mirai码型 */
 export interface MiraiCode extends SingleMessage {
     type: 'MiraiCode';
@@ -750,6 +763,7 @@ export type SingleMessageMap = {
     MusicShare: MusicShare,
     Forward: Forward,
     File: File,
+    MarketFace: MarketFace,
     MiraiCode: MiraiCode
 };
 
@@ -1242,6 +1256,51 @@ export type ChatMessageMap = {
 /** 聊天消息类型 */
 export type ChatMessageType = keyof ChatMessageMap;
 
+/** mirai 同步消息 */
+export interface SyncMessage {
+    /** 同步消息类型 */
+    readonly type: SyncMessageType;
+    /** 消息目标 */
+    subject: Friend | Group | GroupMember;
+    /** 消息链 */
+    messageChain: MessageChain;
+}
+
+/** 好友同步消息 */
+export interface FriendSyncMessage extends SyncMessage {
+    type: 'FriendSyncMessage';
+    subject: Friend;
+}
+
+/** 群同步消息 */
+export interface GroupSyncMessage extends SyncMessage {
+    type: 'GroupSyncMessage';
+    subject: Group;
+}
+
+/** 群临时同步消息 */
+export interface TempSyncMessage extends SyncMessage {
+    type: 'TempSyncMessage';
+    subject: GroupMember;
+}
+
+/** 陌生人同步消息 */
+export interface StrangerSyncMessage extends SyncMessage {
+    type: 'StrangerSyncMessage';
+    subject: Friend;
+}
+
+/** 同步消息映射 */
+export type SyncMessageMap = {
+    FriendSyncMessage: FriendSyncMessage,
+    GroupSyncMessage: GroupSyncMessage,
+    TempSyncMessage: TempSyncMessage,
+    StrangerSyncMessage: StrangerSyncMessage
+}
+
+/** 同步消息类型 */
+export type SyncMessageType = keyof SyncMessageMap;
+
 /** 个人资料性别类型 */
 export type SexType = 'UNKNOWN' | 'MALE' | 'FEMALE';
 
@@ -1308,6 +1367,46 @@ export interface GroupConfig {
     autoApprove: boolean;
     /** 是否允许匿名聊天 */
     anonymousChat: boolean;
+}
+
+/** 群公告 */
+export interface GroupAnnouncement {
+    /** 群对象 */
+    group: Group;
+    /** 群公告内容 */
+    content: string;
+    /** 公告发送人 */
+    senderId: number;
+    /** 公告唯一ID */
+    fid: string;
+    /** 是否所有群成员已确认 */
+    allConfirmed: boolean;
+    /** 确认群成员人数 */
+    confirmedMembersCount: number;
+    /** 发布时间 */
+    publicationTime: number;
+}
+
+/** 群公告发布 */
+export interface PostGroupAnnouncement {
+    /** 内容 */
+    content: string;
+    /** 是否发送给新成员 */
+    sendToNewMember?: boolean;
+    /** 是否置顶 */
+    pinned?: boolean;
+    /** 是否显示群成员修改群名片的引导 */
+    showEditCard?: boolean;
+    /** 是否自动弹出 */
+    showPopup?: boolean;
+    /** 是否需要群成员确认 */
+    requireConfirmation?: boolean;
+    /** 公告图片url */
+    imageUrl?: string;
+    /** 公告图片本地路径 */
+    imagePath?: string;
+    /**  公告图片base64编码 */
+    imageBase64?: string;
 }
 
 /** mirai-api-http请求返回的状态码 */
@@ -1430,6 +1529,12 @@ export interface GroupMemberResponse extends ApiResponse {
     data: GroupMember;
 }
 
+/** 获取群公告响应 */
+export interface GroupAnnouncementsResponse extends ApiResponse {
+    /** 群公告 */
+    data: GroupAnnouncement[];
+}
+
 /** 图片上传响应 */
 export interface UploadImageResponse {
     /** 图片id */
@@ -1450,4 +1555,4 @@ export interface UploadVoiceResponse {
 export type UploadFileResponse = FileInfoResponse;
 
 /** 支持的 mirai-api-http 版本号 */
-export const MIRAI_API_HTTP_VERSION = '2.4.0';
+export const MIRAI_API_HTTP_VERSION = '2.5.0';

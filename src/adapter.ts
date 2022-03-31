@@ -1,30 +1,33 @@
 import EventEmitter from 'events';
-import {ReadStream} from 'fs';
-import {getLogger, Logger} from 'log4js';
-import {ConfigMeta, makeConfigs, UserConfigs} from './config';
+import { ReadStream } from 'fs';
+import { getLogger, Logger } from 'log4js';
+import { ConfigMeta, makeConfigs, UserConfigs } from './config';
 import {
-    AboutResponse,
-    ApiResponse,
-    ChatMessage,
-    Event,
-    FileInfoResponse,
-    FileListResponse,
-    FriendListResponse,
-    GroupConfig,
-    GroupConfigResponse,
-    GroupListResponse,
-    GroupMemberSettings,
-    GroupMemberResponse,
-    MemberListResponse,
-    MessageFromIdResponse,
-    NudgeKind,
-    ProfileResponse,
-    SendMessageResponse,
-    SingleMessage,
-    UploadFileResponse,
-    UploadImageResponse,
-    UploadVoiceResponse,
-    VerifyResponse
+  AboutResponse,
+  ApiResponse,
+  ChatMessage,
+  Event,
+  FileInfoResponse,
+  FileListResponse,
+  FriendListResponse,
+  GroupAnnouncementsResponse,
+  GroupConfig,
+  GroupConfigResponse,
+  GroupListResponse,
+  GroupMemberInfo,
+  GroupMemberResponse,
+  MemberListResponse,
+  MessageFromIdResponse,
+  NudgeKind,
+  PostGroupAnnouncement,
+  ProfileResponse,
+  SendMessageResponse,
+  SingleMessage,
+  SyncMessage,
+  UploadFileResponse,
+  UploadImageResponse,
+  UploadVoiceResponse,
+  VerifyResponse,
 } from './mirai';
 
 type UploadType = 'friend' | 'group' | 'temp';
@@ -60,22 +63,29 @@ type MiraiApiHttpAdapterApiMethodOptions = {
      */
     getFriendProfile(friendId: number): Promise<ProfileResponse>;
 
-    /**
-     * 获取群成员资料
-     * @param memberId 群成员QQ号
-     * @param groupId 群号
-     */
-    getMemberProfile(memberId: number, groupId: number): Promise<ProfileResponse>;
+  /**
+   * 获取群成员资料
+   * @param memberId 群成员QQ号
+   * @param groupId 群号
+   */
+  getMemberProfile(memberId: number, groupId: number): Promise<ProfileResponse>;
 
-    /**
-     * 发送好友消息
-     * @param friendId 好友QQ号
-     * @param messageChain 消息链或消息数组
-     * @param quoteMessageId 引用回复的消息id
-     */
-    sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId?: number): Promise<SendMessageResponse>;
+  /**
+   * 获取指定用户资料
+   * @param userId
+   * @since mirai-api-http v2.5.0
+   */
+  getUserProfile(userId: number): Promise<ProfileResponse>;
 
-    /**
+  /**
+   * 发送好友消息
+   * @param friendId 好友QQ号
+   * @param messageChain 消息链或消息数组
+   * @param quoteMessageId 引用回复的消息id
+   */
+  sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId?: number): Promise<SendMessageResponse>;
+
+  /**
      * 发送群消息
      * @param groupId 群号
      * @param messageChain 消息链或消息数组
@@ -179,32 +189,57 @@ type MiraiApiHttpAdapterApiMethodOptions = {
      */
     getMemberInfo(memberId: number, groupId: number): Promise<GroupMemberResponse>;
 
-    /**
-     * 修改群员设置
-     * @param memberId 群成员QQ号
-     * @param groupId 群号
-     * @param info 群员资料
-     */
-    setMemberInfo(memberId: number, groupId: number, info: GroupMemberSettings): Promise<ApiResponse>;
+  /**
+   * 修改群员设置
+   * @param memberId 群成员QQ号
+   * @param groupId 群号
+   * @param info 群员资料
+   */
+  setMemberInfo(memberId: number, groupId: number, info: GroupMemberInfo): Promise<ApiResponse>;
 
-    /**
-     * 设置管理员(机器人需要有群主权限)
-     * @param memberId 群成员QQ号
-     * @param groupId 群号
-     * @param admin 是否设置为管理员
-     * @since mirai-api-http v2.3.0
-     */
-    setMemberAdmin(memberId: number, groupId: number, admin: boolean): Promise<ApiResponse>;
+  /**
+   * 设置管理员(机器人需要有群主权限)
+   * @param memberId 群成员QQ号
+   * @param groupId 群号
+   * @param admin 是否设置为管理员
+   * @since mirai-api-http v2.3.0
+   */
+  setMemberAdmin(memberId: number, groupId: number, admin: boolean): Promise<ApiResponse>;
 
-    /**
-     * 处理添加好友申请事件
-     * @param eventId 事件id
-     * @param fromId 申请人QQ号
-     * @param groupId 申请人群号, 可能为0
-     * @param operate 操作类型 (0-同意|1-拒绝|2-拒绝并加入黑名单)
-     * @param message 回复的信息
-     */
-    handleNewFriendRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string): Promise<ApiResponse>;
+  /**
+   * 获取群公告
+   * @param groupId 群号
+   * @param offset 分页偏移
+   * @param size 分页大小
+   * @since mirai-api-http v2.5.0
+   */
+  getGroupAnnouncements(groupId: number, offset: number, size: number): Promise<GroupAnnouncementsResponse>;
+
+  /**
+   * 发布群公告
+   * @param groupId 群号
+   * @param announcement 公告内容
+   * @since mirai-api-http v2.5.0
+   */
+  postGroupAnnouncement(groupId: number, announcement: PostGroupAnnouncement): Promise<GroupAnnouncementsResponse>;
+
+  /**
+   * 删除群公告
+   * @param groupId 群号
+   * @param announcementId 群公告id
+   * @since mirai-api-http v2.5.0
+   */
+  deleteGroupAnnouncement(groupId: number, announcementId: number): Promise<ApiResponse>;
+
+  /**
+   * 处理添加好友申请事件
+   * @param eventId 事件id
+   * @param fromId 申请人QQ号
+   * @param groupId 申请人群号, 可能为0
+   * @param operate 操作类型 (0-同意|1-拒绝|2-拒绝并加入黑名单)
+   * @param message 回复的信息
+   */
+  handleNewFriendRequest(eventId: number, fromId: number, groupId: number, operate: number, message: string): Promise<ApiResponse>;
 
     /**
      * 处理用户入群申请事件
@@ -389,6 +424,7 @@ export type MiraiApiHttpAdapterOption<C extends ConfigMeta, D extends object, M 
     & ThisType<MiraiApiHttpAdapter<C, D, M>>;
 
 type MessageReceivedListener<MiraiApiHttpAdapterInstance> = (this: MiraiApiHttpAdapterInstance, chatMessage: ChatMessage) => any;
+type SyncMessageReceivedListener<MiraiApiHttpAdapterInstance> = (this: MiraiApiHttpAdapterInstance, syncMessage: SyncMessage) => any;
 type EventReceivedListener<MiraiApiHttpAdapterInstance> = (this: MiraiApiHttpAdapterInstance, event: Event) => any;
 type LifecycleHookListener<MiraiApiHttpAdapterInstance> = (this: MiraiApiHttpAdapterInstance) => any;
 
@@ -406,77 +442,84 @@ export type MiraiApiHttpAdapter<C extends ConfigMeta = {}, D extends object = ob
         /** 用户配置 */
         configs: UserConfigs<C>;
 
-        /** 是否正在监听 */
-        listening: boolean;
+      /** 是否正在监听 */
+      listening: boolean;
 
-        /** logger */
-        logger: Logger;
+      /** logger */
+      logger: Logger;
 
-        /** 是否为 api adapter 标识, 恒为 true */
-        readonly __isApiAdapter: true;
+      /** 是否为 api adapter 标识, 恒为 true */
+      readonly __isApiAdapter: true;
 
-        addListener(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
-        addListener(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
-        addListener(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        addListener(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        addListener(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        addListener(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        addListener(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        addListener(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      addListener(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      addListener(e: 'sync', listener: SyncMessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      addListener(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      addListener(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      addListener(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      addListener(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      addListener(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      addListener(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      addListener(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
 
-        once(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
-        once(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
-        once(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        once(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        once(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        once(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        once(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        once(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      once(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      once(e: 'sync', listener: SyncMessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      once(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      once(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      once(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      once(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      once(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      once(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      once(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
 
-        on(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
-        on(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
-        on(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        on(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        on(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        on(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        on(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        on(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      on(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      on(e: 'sync', listener: SyncMessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      on(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      on(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      on(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      on(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      on(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      on(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      on(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
 
-        prependListener(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependListener(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependListener(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependListener(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependListener(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependListener(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependListener(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependListener(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependListener(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependListener(e: 'sync', listener: SyncMessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependListener(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependListener(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependListener(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependListener(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependListener(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependListener(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependListener(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
 
-        prependOnceListener(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependOnceListener(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependOnceListener(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependOnceListener(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependOnceListener(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependOnceListener(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependOnceListener(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
-        prependOnceListener(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependOnceListener(e: 'message', listener: MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependOnceListener(e: 'sync', listener: SyncMessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependOnceListener(e: 'event', listener: EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependOnceListener(e: 'used', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependOnceListener(e: 'unused', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependOnceListener(e: 'installed', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependOnceListener(e: 'uninstalled', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependOnceListener(e: 'listen', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
+      prependOnceListener(e: 'stop', listener: LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>);
 
-        emit(e: 'message', chatMessage: ChatMessage);
-        emit(e: 'event', event: Event);
-        emit(e: 'used');
-        emit(e: 'unused');
-        emit(e: 'installed');
-        emit(e: 'uninstalled');
-        emit(e: 'listen');
-        emit(e: 'stop');
+      emit(e: 'message', chatMessage: ChatMessage);
+      emit(e: 'sync', syncMessage: SyncMessage);
+      emit(e: 'event', event: Event);
+      emit(e: 'used');
+      emit(e: 'unused');
+      emit(e: 'installed');
+      emit(e: 'uninstalled');
+      emit(e: 'listen');
+      emit(e: 'stop');
 
-        listeners(e: 'message'): MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>[];
-        listeners(e: 'event'): EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>[];
-        listeners(e: 'used'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
-        listeners(e: 'unused'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
-        listeners(e: 'installed'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
-        listeners(e: 'uninstalled'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
-        listeners(e: 'listen'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
-        listeners(e: 'stop'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
+      listeners(e: 'message'): MessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>[];
+      listeners(e: 'sync'): SyncMessageReceivedListener<MiraiApiHttpAdapter<C, D, M>>[];
+      listeners(e: 'event'): EventReceivedListener<MiraiApiHttpAdapter<C, D, M>>[];
+      listeners(e: 'used'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
+      listeners(e: 'unused'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
+      listeners(e: 'installed'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
+      listeners(e: 'uninstalled'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
+      listeners(e: 'listen'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
+      listeners(e: 'stop'): LifecycleHookListener<MiraiApiHttpAdapter<C, D, M>>[];
     }
     & D & M
     & Readonly<MiraiApiHttpAdapterApiMethodOptions>

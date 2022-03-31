@@ -5,11 +5,24 @@ import { MiraiApiHttpAdapter } from './adapter';
 import { Chat, FriendChat, GroupChat, TempChat } from './chat';
 import { ApplicationConfig, checkUserConfig } from './config';
 import { MessageChain } from './message';
-import { ChatMessage, ChatMessageMap, ChatMessageType, Event, EventMap, EventType, Friend, GroupMember } from './mirai';
+import {
+    ChatMessage,
+    ChatMessageMap,
+    ChatMessageType,
+    Event,
+    EventMap,
+    EventType,
+    Friend,
+    GroupMember,
+    SyncMessage,
+    SyncMessageMap,
+    SyncMessageType,
+} from './mirai';
 import { Pie } from './pie';
 import { makeReadonly } from './utils';
 
 type MessageReceivedListener<T extends ChatMessage> = (chatMessage: T) => any;
+type SyncMessageReceivedListener<T extends SyncMessage> = (syncMessage: T) => any;
 type EventReceivedListener<T extends Event> = (event: T) => any;
 type LifecycleHookListener = () => any;
 
@@ -169,6 +182,11 @@ export class MiraiPieApplication extends EventEmitter {
             this.emit(chatMessage.type, chatMessage);
             await this.__messageDispatcher(chatMessage);
         });
+        adapter.on('sync', async (syncMessage) => {
+            syncMessage.messageChain = MessageChain.from(syncMessage.messageChain);
+            this.emit('sync', syncMessage);
+            this.emit(syncMessage.type, syncMessage);
+        });
         adapter.on('event', (event) => {
             this.emit('event', event);
             this.emit(event.type, event);
@@ -319,6 +337,8 @@ export class MiraiPieApplication extends EventEmitter {
 
     addListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
     addListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+    addListener(e: 'sync', listener: SyncMessageReceivedListener<SyncMessage>): this;
+    addListener<T extends SyncMessageType>(e: T, listener: SyncMessageReceivedListener<SyncMessageMap[T]>): this;
     addListener(e: 'event', listener: EventReceivedListener<Event>): this;
     addListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
     addListener(e: 'listen', listener: LifecycleHookListener): this;
@@ -329,6 +349,8 @@ export class MiraiPieApplication extends EventEmitter {
 
     on(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
     on<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+    on(e: 'sync', listener: SyncMessageReceivedListener<SyncMessage>): this;
+    on<T extends SyncMessageType>(e: T, listener: SyncMessageReceivedListener<SyncMessageMap[T]>): this;
     on(e: 'event', listener: EventReceivedListener<Event>): this;
     on<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
     on(e: 'listen', listener: LifecycleHookListener): this;
@@ -339,6 +361,8 @@ export class MiraiPieApplication extends EventEmitter {
 
     once(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
     once<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+    once(e: 'sync', listener: SyncMessageReceivedListener<SyncMessage>): this;
+    once<T extends SyncMessageType>(e: T, listener: SyncMessageReceivedListener<SyncMessageMap[T]>): this;
     once(e: 'event', listener: EventReceivedListener<Event>): this;
     once<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
     once(e: 'listen', listener: LifecycleHookListener): this;
@@ -349,6 +373,8 @@ export class MiraiPieApplication extends EventEmitter {
 
     listeners(e: 'message'): MessageReceivedListener<ChatMessage>[];
     listeners<T extends ChatMessageType>(e: T): MessageReceivedListener<ChatMessageMap[T]>[];
+    listeners(e: 'sync'): SyncMessageReceivedListener<SyncMessage>[];
+    listeners<T extends SyncMessageType>(e: T): SyncMessageReceivedListener<SyncMessageMap[T]>[];
     listeners(e: 'event'): EventReceivedListener<Event>[];
     listeners<T extends EventType>(e: T): EventReceivedListener<EventMap[T]>[];
     listeners(e: 'listen'): LifecycleHookListener[];
@@ -359,6 +385,8 @@ export class MiraiPieApplication extends EventEmitter {
 
     emit(e: 'message', chatMessage: ChatMessage);
     emit(e: ChatMessageType, chatMessage: ChatMessage);
+    emit(e: 'sync', syncMessage: SyncMessage);
+    emit(e: SyncMessageType, syncMessage: SyncMessage);
     emit(e: 'event', event: Event);
     emit(e: EventType, event: Event);
     emit(e: 'listen');
@@ -370,6 +398,8 @@ export class MiraiPieApplication extends EventEmitter {
 
     prependListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
     prependListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+    prependListener(e: 'sync', listener: SyncMessageReceivedListener<SyncMessage>): this;
+    prependListener<T extends SyncMessageType>(e: T, listener: SyncMessageReceivedListener<SyncMessageMap[T]>): this;
     prependListener(e: 'event', listener: EventReceivedListener<Event>): this;
     prependListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
     prependListener(e: 'listen', listener: LifecycleHookListener): this;
@@ -380,6 +410,8 @@ export class MiraiPieApplication extends EventEmitter {
 
     prependOnceListener(e: 'message', listener: MessageReceivedListener<ChatMessage>): this;
     prependOnceListener<T extends ChatMessageType>(e: T, listener: MessageReceivedListener<ChatMessageMap[T]>): this;
+    prependOnceListener(e: 'sync', listener: SyncMessageReceivedListener<SyncMessage>): this;
+    prependOnceListener<T extends SyncMessageType>(e: T, listener: SyncMessageReceivedListener<SyncMessageMap[T]>): this;
     prependOnceListener(e: 'event', listener: EventReceivedListener<Event>): this;
     prependOnceListener<T extends EventType>(e: T, listener: EventReceivedListener<EventMap[T]>): this;
     prependOnceListener(e: 'listen', listener: LifecycleHookListener): this;

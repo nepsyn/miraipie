@@ -1,17 +1,19 @@
-import {MessageChain, Plain} from './message';
+import { MessageChain, Plain } from './message';
 import {
     FileOverview,
     Friend,
     Group,
+    GroupAnnouncement,
     GroupConfig,
     GroupMember,
-    GroupMemberSettings,
+    GroupMemberInfo,
     GroupPermission,
+    PostGroupAnnouncement,
     Profile,
     ResponseCode,
-    SingleMessage
+    SingleMessage,
 } from './mirai';
-import {MiraiPieApplication} from './miraipie';
+import { MiraiPieApplication } from './miraipie';
 
 /**
  * 聊天窗口, 用以模拟QQ客户端的聊天环境
@@ -245,11 +247,6 @@ export class GroupChat extends Chat {
         return this.contact.permission;
     }
 
-    /** 通过群聊对象构造群聊天窗口 */
-    static from() {
-
-    }
-
     /**
      * 设置群精华消息
      * @param messageId 消息id
@@ -302,6 +299,41 @@ export class GroupChat extends Chat {
     }
 
     /**
+     * 获取群公告列表
+     * @since 1.2.9
+     * @param offset 分页偏移
+     * @param size 分页大小
+     * @return 群公告列表
+     */
+    async getAnnouncements(offset?: number, size?: number): Promise<GroupAnnouncement[]> {
+        const resp = await MiraiPieApplication.instance.api.getGroupAnnouncements(this.contact.id, offset, size);
+        return resp?.data;
+    }
+
+    /**
+     * 发布群公告
+     * @since 1.2.9
+     * @param groupId 群号
+     * @param announcement 公告内容
+     * @return 群公告
+     */
+    async postAnnouncement(groupId: number, announcement: PostGroupAnnouncement): Promise<GroupAnnouncement[]> {
+        const resp = await MiraiPieApplication.instance.api.postGroupAnnouncement(this.contact.id, announcement);
+        return resp?.data;
+    }
+
+    /**
+     * 删除群公告
+     * @since 1.2.9
+     * @param announcementId 群公告id
+     * @return 是否删除成功
+     */
+    async deleteAnnouncement(announcementId: number): Promise<boolean> {
+        const resp = await MiraiPieApplication.instance.api.deleteGroupAnnouncement(this.contact.id, announcementId);
+        return resp?.code === ResponseCode.Success;
+    }
+
+    /**
      * 获取成员信息
      * @param memberId 成员QQ号(默认为当前消息发送人)
      * @return 成员信息
@@ -317,7 +349,7 @@ export class GroupChat extends Chat {
      * @param memberId 成员QQ号(默认为当前消息发送人)
      * @return 是否修改成功
      */
-    async setInfo(info: GroupMemberSettings, memberId?: number): Promise<boolean> {
+    async setInfo(info: GroupMemberInfo, memberId?: number): Promise<boolean> {
         const resp = await MiraiPieApplication.instance.api.setMemberInfo(memberId || this.sender.id, this.contact.id, info);
         return resp?.code === ResponseCode.Success;
     }

@@ -1,17 +1,19 @@
 import WebSocket from 'ws';
-import {makeApiAdapter} from '../adapter';
+import { makeApiAdapter } from '../adapter';
 import {
     ApiResponse,
     ChatMessage,
     Event,
     GroupConfig,
-    GroupMemberSettings,
+    GroupMemberInfo,
     MIRAI_API_HTTP_VERSION,
     NudgeKind,
+    PostGroupAnnouncement,
     ResponseCode,
-    SingleMessage
+    SingleMessage,
+    SyncMessage,
 } from '../mirai';
-import {sleep} from '../utils';
+import { sleep } from '../utils';
 
 function* generateSyncId(): Generator<number> {
     let syncId = 1;
@@ -31,7 +33,7 @@ const WebsocketApiAdapter = makeApiAdapter({
     configMeta: {
         qq: {
             type: Number,
-            description: 'mirai-api-http服务的QQ号'
+            description: 'mirai-api-http服务的QQ号',
         },
         verifyKey: {
             type: String,
@@ -42,24 +44,24 @@ const WebsocketApiAdapter = makeApiAdapter({
             type: String,
             required: true,
             description: 'mirai-api-http服务的主机地址',
-            default: () => '127.0.0.1'
+            default: () => '127.0.0.1',
         },
         port: {
             type: Number,
             required: true,
             description: 'mirai-api-http服务的端口号',
-            default: () => 23333
+            default: () => 23333,
         },
         timeout: {
             type: Number,
             description: '发送请求的超时时间(毫秒)',
-            default: () => 10000
+            default: () => 10000,
         },
         ssl: {
             type: Boolean,
             description: '是否使用SSL',
-            default: () => false
-        }
+            default: () => false,
+        },
     },
     data: {
         /** 响应队列 */
@@ -70,7 +72,7 @@ const WebsocketApiAdapter = makeApiAdapter({
          * websocket 连接
          * @type WebSocket
          */
-        ws: null
+        ws: null,
     },
     methods: {
         async request<T extends ApiResponse>(command: string, content: object = {}, subCommand: string = null): Promise<T> {
@@ -104,7 +106,7 @@ const WebsocketApiAdapter = makeApiAdapter({
             } else {
                 this.logger.error('发送的请求已超时, 请求原始数据:', data);
             }
-        }
+        },
     },
     async listen() {
         if (!this.listening) {
@@ -114,11 +116,12 @@ const WebsocketApiAdapter = makeApiAdapter({
                 this.logger.error(`监听器启动出错:`, err.message);
             });
             this.ws.on('message', (buffer: Buffer) => {
-                const message: { syncId: string, data: ChatMessage | Event | ApiResponse } = JSON.parse(buffer.toString());
+                const message: { syncId: string, data: ChatMessage | SyncMessage | Event | ApiResponse } = JSON.parse(buffer.toString());
                 if ('syncId' in message) {
                     if (message.syncId === '-1') {
-                        const data = message.data as ChatMessage | Event;
+                        const data = message.data as ChatMessage | SyncMessage | Event;
                         if (data.type.endsWith('Message')) this.emit('message', data as ChatMessage);
+                        else if (data.type.endsWith('SyncMessage')) this.emit('sync', data as SyncMessage);
                         else if (data.type.endsWith('Event')) this.emit('event', data as Event);
                     } else if (message.syncId === '') {
                         const data = message.data as ApiResponse;
@@ -171,6 +174,9 @@ const WebsocketApiAdapter = makeApiAdapter({
     async getMemberProfile(memberId: number, groupId: number) {
         return await this.request('memberProfile', {target: groupId, memberId});
     },
+    async getUserProfile(userId: number) {
+        return this.request('userProfile', {target: userId});
+    },
     async sendFriendMessage(friendId: number, messageChain: SingleMessage[], quoteMessageId?: number) {
         return await this.request('sendFriendMessage', {qq: friendId, messageChain, quote: quoteMessageId});
     },
@@ -182,7 +188,7 @@ const WebsocketApiAdapter = makeApiAdapter({
             qq: memberId,
             group: groupId,
             messageChain,
-            quote: quoteMessageId
+            quote: quoteMessageId,
         });
     },
     async sendNudge(targetId: number, subjectId: number, kind: NudgeKind) {
@@ -199,7 +205,7 @@ const WebsocketApiAdapter = makeApiAdapter({
             qq: friendId,
             offset,
             size,
-            withDownloadInfo
+            withDownloadInfo,
         });
     },
     async getFileInfo(fileId: string, path: string, groupId: number, friendId: number, withDownloadInfo: boolean = true) {
@@ -208,7 +214,7 @@ const WebsocketApiAdapter = makeApiAdapter({
             path: path,
             group: groupId,
             qq: friendId,
-            withDownloadInfo
+            withDownloadInfo,
         });
     },
     async createFileDirectory(parentDirectoryId: string, parentDirectoryPath: string, directoryName: string, groupId: number, friendId: number) {
@@ -217,7 +223,7 @@ const WebsocketApiAdapter = makeApiAdapter({
             path: parentDirectoryPath,
             group: groupId,
             qq: friendId,
-            directoryName
+            directoryName,
         });
     },
     async deleteFile(id: string, path: string, groupId: number, friendId: number) {
@@ -230,7 +236,7 @@ const WebsocketApiAdapter = makeApiAdapter({
             group: groupId,
             qq: friendId,
             moveTo: moveToDirectoryId,
-            moveToPath: moveToDirectoryPath
+            moveToPath: moveToDirectoryPath,
         });
     },
     async renameFile(id: string, path: string, groupId: number, friendId: number, name: string) {
@@ -269,11 +275,20 @@ const WebsocketApiAdapter = makeApiAdapter({
     async getMemberInfo(memberId: number, groupId: number) {
         return await this.request('memberInfo', {target: groupId, memberId}, 'get');
     },
-    async setMemberInfo(memberId: number, groupId: number, info: GroupMemberSettings) {
+    async setMemberInfo(memberId: number, groupId: number, info: GroupMemberInfo) {
         return await this.request('memberInfo', {target: groupId, memberId, info}, 'update');
     },
     async setMemberAdmin(memberId: number, groupId: number, admin: boolean = true) {
         return await this.request('memberAdmin', {target: groupId, memberId, assign: admin});
+    },
+    async getGroupAnnouncements(groupId: number, offset: number, size: number) {
+        return this.request('anno_list', {id: groupId, offset, size});
+    },
+    async postGroupAnnouncement(groupId: number, announcement: PostGroupAnnouncement) {
+        return this.request('anno_publish', {target: groupId, ...announcement});
+    },
+    async deleteGroupAnnouncement(groupId: number, announcementId: number) {
+        return this.request('anno_delete', {id: groupId, fid: announcementId});
     },
     async executeCommand(command: SingleMessage[]) {
         return this.request('cmd_execute', {command});
@@ -301,7 +316,7 @@ const WebsocketApiAdapter = makeApiAdapter({
     async uploadGroupFile() {
         this.logger.error('暂不支持的操作: uploadGroupFile');
         return null;
-    }
+    },
 });
 
 export = WebsocketApiAdapter;

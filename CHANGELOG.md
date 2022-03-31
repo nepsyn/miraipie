@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2.9
+
+- 添加 支持其他客户端的同步消息 `SyncMessage` 及 miraipie 的事件监听。
+- 添加 支持商店标签 `MarketFace` 。
+- 添加 新增公告相关接口 `getGroupAnnouncements` ， `postGroupAnnouncement` ， `deleteGroupAnnouncement` 。
+- 添加 查询用户资料接口 `getUserProfile` 。
+- 修复 群成员信息接口 #1
+
 ## v1.2.8
 
 - 添加 创建应用时添加参数 `loggerOptions` 用于自定义 log4js 配置。
