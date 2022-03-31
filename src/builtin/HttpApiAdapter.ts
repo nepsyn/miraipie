@@ -6,7 +6,7 @@ import {
     ChatMessage,
     Event,
     GroupConfig,
-    GroupMember,
+    GroupMemberSettings,
     MIRAI_API_HTTP_VERSION,
     NudgeKind,
     ResponseCode,
@@ -284,7 +284,7 @@ const HttpApiAdapter = makeApiAdapter({
     async getMemberInfo(memberId: number, groupId: number) {
         return this.get('memberInfo', {target: groupId, memberId});
     },
-    async setMemberInfo(memberId: number, groupId: number, info: GroupMember) {
+    async setMemberInfo(memberId: number, groupId: number, info: GroupMemberSettings) {
         return this.post('memberInfo', {target: groupId, memberId, info});
     },
     async setMemberAdmin(memberId: number, groupId: number, admin: boolean = true) {

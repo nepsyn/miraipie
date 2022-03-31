@@ -13,7 +13,7 @@ import {
     GroupConfig,
     GroupConfigResponse,
     GroupListResponse,
-    GroupMember,
+    GroupMemberSettings,
     GroupMemberResponse,
     MemberListResponse,
     MessageFromIdResponse,
@@ -185,7 +185,7 @@ type MiraiApiHttpAdapterApiMethodOptions = {
      * @param groupId 群号
      * @param info 群员资料
      */
-    setMemberInfo(memberId: number, groupId: number, info: GroupMember): Promise<ApiResponse>;
+    setMemberInfo(memberId: number, groupId: number, info: GroupMemberSettings): Promise<ApiResponse>;
 
     /**
      * 设置管理员(机器人需要有群主权限)
